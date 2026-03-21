@@ -1,0 +1,44 @@
+{
+  "name": "bubble",
+  "version": "1.0.0",
+  "description": "fast",
+  "main": "index.js",
+  "scripts": {
+    "start": "npm run dev",
+    "dev": "npx webpack serve --config ./webpack/webpack.dev.js",
+    "build": "npx webpack --config ./webpack/webpack.prod.js"
+  },
+  "keywords": [],
+  "author": "Jelly",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.26.0",
+    "css-loader": "^7.1.2",
+    "css-minimizer-webpack-plugin": "^7.0.0",
+    "eslint": "^9.26.0",
+    "file-loader": "^6.2.0",
+    "globals": "^16.0.0",
+    "mini-css-extract-plugin": "^2.9.2",
+    "postcss": "^8.4.49",
+    "postcss-loader": "^8.1.1",
+    "postcss-preset-env": "^10.1.1",
+    "sass": "^1.81.0",
+    "sass-loader": "^16.0.3",
+    "style-loader": "^4.0.0",
+    "url-loader": "^4.1.1",
+    "webpack": "^5.96.1",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.1.0"
+  },
+  "dependencies": {
+    "lazysizes": "^5.3.2",
+    "normalize.css": "^8.0.1",
+    "spotlight.js": "^0.7.8",
+    "swiper": "^11.1.14"
+  },
+  "browserslist": [
+    "last 2 version",
+    "> 1%",
+    "not dead"
+  ]
+}

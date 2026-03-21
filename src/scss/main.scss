@@ -1,0 +1,279 @@
+@use "color.scss"; // 颜色
+@use "grid.scss"; // 响应式网格
+@use "post.scss"; // 文章
+@use "public/nav.scss"; // 导航栏
+@use "public/tag_cloud.scss"; // 首页标签云
+@use "public/swiper.scss"; // 首页轮播图
+@use "public/article_card.scss"; // 文章卡片
+@use "public/comment.scss"; // 评论区
+@use "public/footer.scss"; // 页脚
+@use "lib/prism.scss"; // 文章代码美化样式
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  overflow-y: scroll;
+  line-height: 1.5rem;
+  font-family: "us3117", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+/* 根据 html 元素上的 font-size-mode 属性设置根字体大小，font-size-mode由js控制 */
+html[font-size-mode="s"] {
+  font-size: 14px;
+}
+
+html[font-size-mode="m"] {
+  font-size: 16px;
+}
+
+html[font-size-mode="l"] {
+  font-size: 18px;
+}
+
+html[font-size-mode="xl"] {
+  font-size: 20px;
+}
+
+/* Ant-Design */
+/* 做了一些动态适配 */
+h1 {
+  // font-size: 30px;
+  // line-height: 38px;
+  font-size: 1.875rem;
+  line-height: 2.375rem;
+}
+
+h2 {
+  // font-size: 24px;
+  // line-height: 32px;
+  font-size: 1.5rem;
+  line-height: 2rem;
+}
+
+h3 {
+  // font-size: 20px;
+  // line-height: 28px;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+}
+
+h4 {
+  // font-size: 16px;
+  // line-height: 24px;
+  font-size: 1rem;
+  line-height: 1.25rem;
+}
+
+h5 {
+  // font-size: 14px;
+  // line-height: 22px;
+  font-size: 0.875rem;
+  line-height: 1.375rem;
+}
+
+h6 {
+  // font-size: 12px;
+  // line-height: 20px;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+}
+
+/* 清除默认样式 */
+a {
+  text-decoration: none;
+}
+
+ul {
+  list-style: none;
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-inline-start: 0;
+}
+
+ol {
+  margin-block-start: 0;
+  margin-block-end: 0;
+  padding-inline-start: 0;
+}
+
+/* 自定义标准样式 */
+blockquote {
+  border: none;
+  color: var(--tertiaryText);
+  font-size: 1rem;
+  text-indent: 0;
+  margin: 0 0 15px;
+  line-height: 1.8;
+  font-style: normal;
+  padding: 30px 38px;
+  position: relative;
+  display: inline-block;
+
+  &:before {
+    top: 0;
+    left: 12px;
+    content: "“";
+  }
+
+  &:after {
+    right: 12px;
+    content: "”";
+    bottom: -31px;
+  }
+
+  &:before,
+  &:after {
+    font-size: 4rem;
+    color: #e0e0e0;
+    line-height: 1em;
+    font-weight: 700;
+    position: absolute;
+    font-family: Arial, serif;
+  }
+}
+
+table {
+  width: 100%;
+  max-width: 100%;
+  font-size: 0.8125rem;
+  color: var(--text1);
+  table-layout: fixed;
+  margin: 10px 0 18px;
+  border-collapse: collapse;
+  border-top: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+  border-spacing: 0;
+
+  th {
+    background: var(--card2);
+  }
+
+  td,
+  th {
+    padding: 5px 10px;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+  }
+}
+
+body {
+  background-color: var(--body);
+}
+
+@font-face {
+  font-family: "us3117";
+  src: url("../woff2/us117.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "us3117";
+  src: url("../woff2/1900_1.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "us3117";
+  src: url("../woff2/1600_2.woff2") format("woff2");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+// 分页器，分页器在手机页面下可以左右滚动，适配了无限个分页
+.page-navigator {
+  text-align: center; // 居中li元素
+  line-height: 3rem;
+  background-color: var(--card1);
+  border-radius: var(--radius);
+  box-shadow: var(--box-shadow);
+  overflow-x: auto;
+  // "justify-content:center" 不能和 "overflow-x:auto" 一起使用，否则会怎么样我忘记了
+  white-space: nowrap;
+
+  li {
+    display: inline-block;
+    margin: 0 5px;
+
+    a {
+      color: inherit;
+      padding: 6px 12px;
+      border-radius: var(--radius);
+
+      &:hover {
+        background-color: var(--bg-hover);
+        color: var(--black);
+      }
+    }
+  }
+
+  // 当前选中的分页
+  .current {
+    a {
+      color: #fff;
+      background-color: var(--theme-8);
+
+      &:hover {
+        background-color: var(--theme-5);
+        color: #fff;
+      }
+    }
+  }
+}
+
+/* 针对图像未加载出来时，不显示 */
+.lazyload,
+.lazyloading {
+  opacity: 0;
+}
+
+.lazyloaded {
+  opacity: 1;
+  transition: opacity 0.4s;
+}
+
+.d-none {
+  display: none !important;
+}
+
+::selection {
+  background: #ffd96e;
+  color: #000;
+}
+
+/* 特殊适配 */
+[color-scheme="dark"] {
+
+  /* 适配暗色模式下，默认配色方案的字体颜色对比度过低 */
+  .article-card-info-footer a,
+  .post a,
+  .footer a,
+  .comment-form a {
+    color: var(--theme-5);
+  }
+
+  .nav-form-input {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}
+
+// 无障碍
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

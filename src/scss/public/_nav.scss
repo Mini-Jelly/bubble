@@ -1,0 +1,488 @@
+$transition-duration: 0.45s;
+$nav-height: 48px;
+
+@mixin card {
+  border-radius: var(--radius);
+  background-color: var(--card1);
+  box-shadow: var(--box-shadow);
+}
+
+// 响应式
+// 屏幕宽度大于等于834
+@media only screen and (min-width: 834px) {
+
+  // 隐藏侧边栏sidebar
+  .sidebar,
+  #sidebarOutBtn,
+  #sidebar-backdrop {
+    display: none !important;
+  }
+}
+
+// 屏幕宽度小于等于833
+@media only screen and (max-width: 833px) {
+
+  // 取消内边距
+  .nav {
+    padding: 0 !important;
+  }
+
+  // 隐藏导航栏的分类，搜索框，
+  // TODO 以及近期更新
+  .nav-form,
+  .nav-category,
+  .recent-updates {
+    display: none !important;
+  }
+}
+
+.nav {
+  z-index: 10;
+  width: 100%;
+  height: #{$nav-height};
+  position: relative;
+  background-color: var(--theme-9);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  padding: 0 1rem;
+
+  #sidebarOutBtn {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    width: #{$nav-height};
+    height: #{$nav-height};
+    // 让SVG图标居中
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // LOGO
+  &-logo {
+    position: relative;
+    height: #{$nav-height};
+
+    img {
+      width: auto;
+      height: #{$nav-height};
+    }
+  }
+
+  // 搜索框
+  &-form {
+    display: flex;
+    position: relative;
+    width: 100%;
+    height: #{$nav-height};
+    margin: 0 0.5rem;
+
+    button {
+      position: absolute;
+      background-color: transparent;
+      border: none;
+      cursor: pointer;
+      outline: none;
+      height: #{$nav-height - 10px};
+      padding: 0 11px;
+    }
+
+    &-submit {
+      left: 0.5rem;
+      top: 6px;
+    }
+
+    //搜索框输入
+    &-input {
+      width: 100%;
+      margin: 5px 0;
+      padding: 5px 2.9rem;
+      border-radius: 24px;
+      border: none;
+      outline: none;
+      line-height: 1.5rem;
+      color: #fff;
+      background-color: rgba(255, 255, 255, 0.3);
+
+      &::placeholder {
+        color: inherit;
+      }
+    }
+
+    // 清除搜索框信息按钮
+    &-clean {
+      top: 6px;
+      right: 0.5rem;
+      display: none;
+    }
+  }
+
+  &-category {
+    height: #{$nav-height};
+    // width: 100%;
+    line-height: #{$nav-height};
+    color: #fff;
+
+    a {
+      color: inherit;
+      display: inline-block;
+      width: 100%;
+      text-align: center;
+      padding: 0 15px;
+      min-width: max-content;
+    }
+
+    // 顶级分类列表
+    >.category-list {
+      display: flex !important;
+      justify-content: flex-end;
+
+      // 顶级分类列表的首个li特殊化
+      >li>.category-list {
+        margin-top: #{$nav-height};
+        left: 0 !important;
+      }
+
+      // 次级分类的li
+      li {
+        position: relative;
+
+        // 顶级分类列表的所有li触发hover,紧接着的.category-list
+        &:hover>.category-list {
+          display: block;
+          background-color: rgba(38, 38, 38, 0.9);
+          position: absolute;
+          top: 0px;
+          left: 100%;
+          min-width: 100px;
+        }
+      }
+
+      // 所有的次级分类列表
+      .category-list {
+        display: none;
+
+        li a:hover {
+          background-color: var(--theme-7);
+        }
+      }
+    }
+
+    .category-list-icon::after {
+      content: "";
+      position: absolute;
+      top: 20px;
+      right: 8px;
+      width: 8px;
+      height: 8px;
+      border: #fff solid;
+      border-width: 1px 1px 0 0;
+      transform: rotate(45deg);
+    }
+  }
+
+  // 近期更新
+  .recent-updates {
+    list-style: none;
+    line-height: #{$nav-height};
+
+    a {
+      color: #fff;
+      display: inline-block;
+      min-width: -moz-max-content;
+      min-width: max-content;
+      padding: 0 15px;
+      text-align: center;
+      width: 100%;
+    }
+  }
+
+  // 全局设置
+  .settings {
+    position: relative;
+    display: inline-block;
+    width: #{$nav-height};
+    height: #{$nav-height};
+
+    // 设置按钮
+    &-btn {
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      background-color: transparent;
+      border: none;
+      outline: none;
+      line-height: 0; // 使得按钮上下居中，而不是像文字一样会偏高
+
+      svg {
+        width: #{calc($nav-height / 2)};
+        height: #{calc($nav-height / 2)};
+        fill: #fff;
+      }
+    }
+
+    &-menu {
+      width: max-content;
+      display: none;
+      background-color: var(--card2);
+      box-shadow: var(--box-shadow);
+      flex-direction: column;
+      border-radius: var(--radius);
+      padding: 5px;
+      position: absolute;
+      margin-top: 5px;
+      right: 15px;
+      border: 1px solid var(--border);
+
+      &.show {
+        display: block;
+      }
+
+      li+li {
+        margin-top: 2px;
+      }
+
+      li {
+        position: relative;
+        color: var(--text1);
+        display: flex;
+        flex-direction: row;
+        height: 30px;
+        border: 0;
+        padding: 5px;
+        background-color: transparent;
+        border-radius: var(--radius);
+
+        &.active {
+          background-color: var(--theme-8);
+          color: #fff;
+
+          &::after {
+            content: " ";
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 14px;
+            height: 6px;
+            border: #fff solid;
+            border-width: 3px 3px 0px 0px;
+            transform: rotate(135deg);
+          }
+        }
+
+        // 菜单分割线
+        &.divider {
+          height: 1px;
+          overflow: hidden;
+          line-height: 0;
+          margin: 4px 2px;
+          padding: 0;
+          background-color: var(--border);
+          border-radius: var(--radius);
+
+          &:hover {
+            cursor: default;
+            background-color: var(--border);
+          }
+        }
+
+        svg {
+          width: 25px;
+          height: 100%;
+          fill: currentColor;
+          margin-right: 5px;
+        }
+
+        span {
+          width: 100%;
+          text-align: left;
+          //保持上下居中
+          line-height: 1rem;
+          align-content: center;
+        }
+
+        &:hover {
+          color: #fff;
+          cursor: pointer;
+          background-color: var(--theme-5);
+        }
+      }
+    }
+  }
+}
+
+// 侧边栏，手机端专用
+.sidebar {
+  z-index: 20;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  position: fixed;
+  transform: translateX(-100%);
+  background-color: var(--body);
+  transition: transform #{$transition-duration} ease-out;
+  width: 80%;
+  max-width: 400px;
+  min-width: 120px;
+  padding: 15px;
+  font-size: 1.25rem;
+  line-height: 2rem;
+  overflow: scroll;
+  scrollbar-width: none;
+  list-style-type: none;
+
+  &-header {
+    @include card();
+    padding: 15px;
+    margin-bottom: 20px;
+
+    form {
+      display: flex;
+      height: 45px;
+      flex-direction: row;
+      align-items: center;
+
+      input[type="text"] {
+        color: var(--text1);
+        width: 100%;
+        height: 100%;
+        border: 1px solid transparent;
+        padding: 5px 20px;
+        border-radius: 25px 0 0 25px;
+        line-height: inherit;
+        background-color: var(--card2);
+        transition: border 0.2s linear;
+
+        &:focus {
+          outline: none;
+          border: 1px solid var(--theme-9);
+        }
+
+        &::placeholder {
+          color: inherit;
+        }
+      }
+
+      button[type="submit"] {
+        height: 100%;
+        border: none;
+        background-color: var(--theme-9);
+        color: #fff;
+        border-radius: 0 25px 25px 0;
+        padding: 0 10px;
+      }
+    }
+  }
+
+  &-content {
+    @include card();
+    padding: 10px 20px;
+
+    .sidebar-list {
+      list-style: none;
+      position: relative;
+
+      // 对于子菜单的ul
+      ul {
+        border-left: 2px solid #adb5bd;
+        margin-left: 10px;
+        padding-left: 10px;
+
+        // 动画相关
+        max-height: 0;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-5px);
+        transition: all 0.6s cubic-bezier(0.3, 0.9, 0.3, 0.95);
+        overflow-y: scroll;
+        scrollbar-width: none;
+      }
+
+      li {
+        position: relative;
+        cursor: pointer;
+
+        a {
+          color: inherit;
+        }
+      }
+
+      // 分类展开
+      li[open] {
+        >ul {
+          opacity: 1;
+          max-height: 100vh;
+          visibility: visible;
+          transform: translateY(0);
+          transition: all 0.6s ease-in-out;
+        }
+
+        // 当子分类展开时对应的“<”会旋转
+        &.toggle-icon::after {
+          transform: rotate(135deg);
+        }
+      }
+
+      // 一个“<”
+      .toggle-icon::after {
+        content: " ";
+        position: absolute;
+        top: 16px;
+        right: 5px;
+        width: 5px;
+        height: 5px;
+        border: var(--black) solid;
+        border-width: 2px 2px 0 0;
+        transform: rotate(225deg);
+        transition: transform 0.2s linear;
+      }
+    }
+  }
+}
+
+.sidebar[open] {
+  transform: translateX(0);
+
+  // 当侧边栏打开时，设置背景覆盖，用来给js判断点击，点一下之后就消除背景
+  ~#sidebar-backdrop {
+    opacity: 0.5;
+    visibility: visible;
+  }
+}
+
+#sidebar-backdrop {
+  // 不用display:none，因为它可能会造成transition无法生效的问题
+  visibility: hidden;
+  z-index: 10;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  width: 100vw;
+  height: 100vh;
+  position: fixed;
+  background-color: #000;
+  transition: opacity #{$transition-duration} linear,
+  visibility #{$transition-duration} linear;
+}
+
+@keyframes rotateAnimation {
+
+  // 不从0%开始，把0~50当成动画开始时的延迟，延迟是动画时间的一半
+  // 这样实现的效果就不是一直在旋转，而是转转停停，转转停停
+  50% {
+    // 初始状态
+    transform: rotateY(0deg);
+  }
+
+  100% {
+    // 旋转一圈
+    transform: rotateY(1turn);
+  }
+}
+
+// 动画状态，默认不启动
+.rotate {
+  // 每4秒旋转一次
+  animation: rotateAnimation 4s infinite;
+}

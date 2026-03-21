@@ -1,0 +1,91 @@
+.post {
+  padding: 20px 3%;
+  box-shadow: var(--box-shadow);
+  background-color: var(--card1);
+  border-radius: var(--radius);
+  margin-top: 20px;
+  word-wrap: break-word;
+
+  a {
+    color: var(--theme-9);
+  }
+
+  ul {
+    //恢复默认样式
+    list-style: disc;
+  }
+
+  ul,
+  ol {
+    padding-inline-start: 1.5rem;
+    margin: 6px 0;
+  }
+
+  code,
+  kbd,
+  pre,
+  samp {
+    margin: 0 3px;
+    padding: 2px 4px;
+    color: var(--theme-9);
+    border-radius: 4px;
+    background-color: var(--theme-0);
+    font-size: 0.875rem;
+    font-family: Menlo, Monaco, Consolas, Lucida Console, Courier New, monospace;
+  }
+
+  // 文章标题
+  &-title {
+    text-align: center;
+  }
+
+  // 文章元数据
+  &-meta {
+    text-align: center;
+
+    li {
+      display: inline-block;
+    }
+  }
+
+  // 文章最后修改的时间
+  &-modified {
+    text-align: center;
+    color: var(--text2);
+  }
+
+  //文章内容
+  &-content {
+    img {
+      max-width: 100%;
+    }
+
+    h2 {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.3rem;
+    }
+
+    li+li {
+      margin-top: 0.625rem;
+    }
+  }
+
+  // 文章末尾标签
+  &-tags {
+    margin: 1rem 0;
+
+    a {
+      display: block;
+      border-radius: var(--radius);
+      display: inline-block;
+      padding: 0.3125rem;
+      background-color: var(--card2);
+      margin-right: 0.625rem;
+
+      &:hover {
+        background-color: var(--theme-8);
+        color: #fff !important;
+      }
+    }
+  }
+}

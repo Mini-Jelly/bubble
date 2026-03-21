@@ -1,0 +1,30 @@
+.footer {
+  text-align: center;
+  margin: 1rem 0;
+  
+  a {
+    color: var(--theme-9);
+  }
+
+  &-content {
+    ul {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      list-style: none;
+      // 超出长度不换行并且可以左右滑动（适配手机端）
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    li + li {
+      &::before {
+        content: "・";
+        position: relative;
+        color: inherit;
+      }
+    }
+    p {
+      margin: 5px 0;
+    }
+  }
+}

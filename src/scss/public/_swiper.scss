@@ -1,0 +1,24 @@
+$swiperHeight: 225px;
+:root {
+  --swiper-theme-color: var(--theme-9) !important;
+}
+
+.swiper {
+  height: $swiperHeight;
+  margin: 1rem 0;
+}
+
+.swiper-slide {
+  img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    border-radius: var(--radius);
+  }
+}
+// 屏幕宽度小于等于833
+@media only screen and (max-width: 833px) {
+  .swiper {
+    height: $swiperHeight * 0.8;
+  }
+}

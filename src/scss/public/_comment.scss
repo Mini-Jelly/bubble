@@ -1,0 +1,150 @@
+.comment {
+  margin: 1rem auto;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  box-shadow: var(--box-shadow);
+  background-color: var(--card1);
+
+  &-form {
+    a{
+      color: var(--theme-9);
+    } 
+
+    textarea,
+    input {
+      outline: 0;
+      color: var(--text1);
+      border-radius: var(--radius);
+      background-color: var(--card2);
+      border: 1px solid var(--border);
+      &:focus {
+        border-color: var(--theme-8);
+      }
+      &::placeholder {
+        color: inherit;
+      }
+    }
+    textarea {
+      margin: 0.5rem 0;
+      width: 100%;
+      padding: 1rem;
+      min-width: 100%;
+      min-height: 100px;
+      max-width: 100%;
+      max-height: 500px;
+    }
+    input {
+      width: 100%;
+      padding: 10px 15px;
+    }
+
+    button.submit {
+      cursor: pointer;
+      padding: 10px;
+      color: #fff;
+      border-radius: var(--radius);
+      background-color: var(--theme-9);
+      border: 1px solid var(--border);
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      margin-bottom: 0.5rem;
+
+      &-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        width: 100%;
+
+        > label {
+          margin-bottom: 0.25rem;
+        }
+      }
+
+      div + div {
+        margin-left: 1rem;
+      }
+    }
+  }
+
+  &-list,
+  &-list ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &-list {
+    li {
+      margin: 10px 0;
+      padding: 14px;
+      border: 1px solid #eee;
+
+      .comment-level-odd {
+        background: #f6f6f3;
+      }
+
+      .comment-level-even {
+        background: #fff;
+      }
+
+      .comment-by-author {
+        background: #fff9e8;
+      }
+
+      .comment-reply {
+        text-align: right;
+        font-size: 0.9rem;
+      }
+    }
+
+    .respond {
+      margin-top: 15px;
+      border-top: 1px solid #eee;
+    }
+  }
+
+  &-meta {
+    a {
+      color: #999;
+      font-size: 0.9rem;
+    }
+  }
+
+  &-author {
+    display: block;
+    margin-bottom: 3px;
+    color: #444;
+
+    .avatar {
+      float: left;
+      margin-right: 10px;
+      max-height: 24px;
+      max-width: 24px;
+    }
+
+    cite {
+      font-weight: 700;
+      font-style: normal;
+    }
+  }
+
+  &-content {
+    word-wrap: break-word;
+  }
+}
+
+@media (max-width: 767px) {
+  .comment-form {
+    .input-group {
+      flex-direction: column;
+      div + div {
+        margin-left: 0;
+        margin-top: 0.5rem;
+      }
+    }
+  }
+}

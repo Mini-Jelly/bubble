@@ -1,0 +1,53 @@
+const path = require("path");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const TerserPlugin = require("terser-webpack-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
+
+module.exports = {
+  mode: "development",
+  entry: {
+    main: "./src/entry/main.js",
+    theme_config: "./src/entry/theme_config.js",
+    swiper: "./src/entry/swiper.js",
+    lazysizes:"./src/entry/lazysizes.js",
+  },
+  output: {
+    path: path.resolve(__dirname, "../dist"),
+    filename: "[name].min.js", // 输出的 JS 文件名
+    clean: true, // 启用自动清理输出目录
+  },
+  module: {
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /node_modules/, // 排除 node_modules
+      },
+      {
+        test: /\.css$/,
+        use: [MiniCssExtractPlugin.loader, "css-loader"],
+      },
+      {
+        test: /\.s[ac]ss$/,
+        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+      },
+      //处理其他资源
+      {
+        test: /\.(ttf|woff2?|map4|map3|avi)$/,
+        type: "asset/resource",
+      },
+    ],
+  },
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: "../dist/[name].min.css", // 提取的 CSS 文件名
+    }),
+  ],
+  devtool: "source-map", // 生产环境下生成 SourceMap，方便调试
+  // 开发服务器
+  devServer: {
+    host: "localhost", // 启动服务器域名
+    port: "3000", // 启动服务器端口号
+    open: true, // 是否自动打开浏览器
+  },
+  watch: process.env.NODE_ENV === "development", // 仅在开发环境启用 watch
+};

@@ -1,0 +1,36 @@
+.tag-cloud {
+  margin: 1rem auto;
+
+  > h1 {
+    font-size: 1.5rem;
+  }
+
+  &-list {
+    margin: 1rem 0;
+    display: grid;
+    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+
+    a {
+      color: var(--text1);
+      padding: 7px 0;
+      // 上下居中
+      text-align: center;
+      align-content: center;
+      border-radius: var(--radius);
+      background-color: var(--card1);
+      box-shadow: var(--box-shadow);
+
+      &:hover {
+        color:#fff;
+        background-color: var(--theme-8);
+      }
+    }
+  }
+}
+// 屏幕宽度小于等于833
+@media only screen and (max-width: 833px) {
+  .tag-cloud {
+    display: none;
+  }
+}
