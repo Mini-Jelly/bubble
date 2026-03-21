@@ -8,6 +8,6 @@ import "../js/lib/prism.min.js";
 import "../scss/main.scss";
 //引入js
 import "../js/main/nav.js";
-import "../js/main/sidebar.js";
+import "../js/main/nav_sidebar.js";
 import "../js/main/settings.js";
 import "../js/main/footer.js";

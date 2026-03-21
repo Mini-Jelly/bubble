@@ -379,26 +379,28 @@ $nav-height: 48px;
     @include card();
     padding: 10px 20px;
 
+    // 侧边栏项目公共属性
     .sidebar-list {
       list-style: none;
       position: relative;
 
       // 对于子菜单的ul
-      ul {
+      ul.sidebar-list {
         border-left: 2px solid #adb5bd;
         margin-left: 10px;
         padding-left: 10px;
 
         // 动画相关
-        max-height: 0;
-        opacity: 0;
-        visibility: hidden;
-        transform: translateY(-5px);
-        transition: all 0.6s cubic-bezier(0.3, 0.9, 0.3, 0.95);
-        overflow-y: scroll;
+        height: 0;
+        transition-property: height;
+        transition-duration: 0.4s;
+        transition-timing-function: ease-in-out;
+        transition-delay: 0s;
+        overflow-y: hidden;
         scrollbar-width: none;
       }
 
+      // 对于不可展开的li项目
       li {
         position: relative;
         cursor: pointer;
@@ -408,18 +410,11 @@ $nav-height: 48px;
         }
       }
 
-      // 分类展开
-      li[open] {
-        >ul {
-          opacity: 1;
-          max-height: 100vh;
-          visibility: visible;
-          transform: translateY(0);
-          transition: all 0.6s ease-in-out;
-        }
+      // 对于可展开的li分类项目
+      li.toggle-icon[open] {
 
-        // 当子分类展开时对应的“<”会旋转
-        &.toggle-icon::after {
+        // 当li分类项目展开时,对应的“<”会旋转
+        &::after {
           transform: rotate(135deg);
         }
       }
