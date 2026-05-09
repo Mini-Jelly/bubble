@@ -7,7 +7,6 @@
       <li>
         <a href="<?= $this->options->siteUrl(); ?>">首页</a>
       </li>
-      <!-- TODO 如果数量很多会溢出，需要一个更合理的样式，特别是手机端 -->
       <?php $this->widget('Widget_Contents_Page_List')->to($pages);
       while ($pages->next()): ?>
         <li><a href="<?= $pages->permalink(); ?>" title="<?= $pages->title(); ?>"><?= $pages->title(); ?></a></li>
