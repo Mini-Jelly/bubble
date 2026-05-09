@@ -18,7 +18,7 @@ $this->need('./public/header.php');
             $pattern = '/<img.*?src=\"(.*?)\"[^>]*>/i';
             $replacement = '<a href="$1" class="spotlight" data-title="false"><img class="lazyload" data-src="$1" alt="' . $this->title . '" title="点击放大图片"></a>';
             $content = preg_replace($pattern, $replacement, $this->content);
-            echo($content); ?>
+            echo ($content); ?>
             <?php $this->need('./public/post_copyright.php'); ?>
           </div>
         </div>

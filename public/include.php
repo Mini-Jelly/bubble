@@ -8,4 +8,3 @@
   <script src="<?php $this->options->themeUrl('dist/swiper.min.js'); ?>"></script>
   <link rel="stylesheet" href="<?php $this->options->themeUrl('dist/swiper.min.css'); ?>">
 <?php } ?>
-<!-- TODO 国内的cdn太垃圾了，暂时不做cdn -->

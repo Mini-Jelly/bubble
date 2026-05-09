@@ -7,6 +7,8 @@
  * @version Beat 20260204
  * @link https://jjj8.top
  */
+
+//  TODO 演进方向──>vite + pnpm 构建项目 
 if (!defined('__TYPECHO_ROOT_DIR__'))
   exit;
 $this->need('./public/header.php'); ?>

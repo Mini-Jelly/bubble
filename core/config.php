@@ -47,24 +47,6 @@ function themeConfig($form)
   $themeColor->setAttribute('class', 'bubble-option Global');
   $form->addInput($themeColor);
 
-  /* 使用cdn加速静态资源 */
-  $cdnAcceleration = new Typecho_Widget_Helper_Form_Element_Select(
-    'cdnAcceleration',
-    array(
-      'off' => '关闭（默认 - 本地）',
-      'staticfile' => 'StaticfileCDN（七牛云）',
-      'bootcdn' => 'BootCDN（又拍云）',
-      'jsdelivr' => 'jsdelivr（全球加速）',
-    ),
-    'off',
-    '是否使用cdn加速静态公共资源（目前cdn不可用！！！）',
-    '介绍：选择公共js和css资源是否使用CDN加速方案</br>
-          说明：如果你的云主机比较卡或者网页加载速度慢可以尝试开启,关闭则默认使用本地方案</br>
-          公共库Ping值检测：<a href="https://ping.chinaz.com/">站长工具</a>'
-  );
-  $cdnAcceleration->setAttribute('class', 'bubble-option Dev');
-  $form->addInput($cdnAcceleration);
-
   /* 在新窗口打开 */
   $openInNewWindow = new Typecho_Widget_Helper_Form_Element_Select(
     'openInNewWindow',
@@ -100,8 +82,8 @@ function themeConfig($form)
   $tagCloud = new Typecho_Widget_Helper_Form_Element_Select(
     'tagCloud',
     array(
-      'off' => '关闭（默认）',
-      'on' => '开启'
+      'on' => '开启（默认）',
+      'off' => '关闭'
     ),
     'on',
     '标签云',
@@ -110,7 +92,7 @@ function themeConfig($form)
   $tagCloud->setAttribute('class', 'bubble-option Home');
   $form->addInput($tagCloud);
 
-  /* 文章置顶功能 */
+  /* 文章首页置顶功能 */
   $stickyCid = new Typecho_Widget_Helper_Form_Element_Text(
     'stickyCid',
     NULL,
@@ -122,6 +104,20 @@ function themeConfig($form)
   );
   $stickyCid->setAttribute('class', 'bubble-option Home');
   $form->addInput($stickyCid);
+
+  /* 文章阅读时目录功能 */
+  $postToc = new Typecho_Widget_Helper_Form_Element_Select(
+    'postToc',
+    array(
+      'on' => '开启（默认）',
+      'off' => '关闭'
+    ),
+    'on',
+    '文章目录',
+    '介绍：用于在文章页面显示目录'
+  );
+  $postToc->setAttribute('class', 'bubble-option Article');
+  $form->addInput($postToc);
 
   /* ICP备案号 */
   $ICP = new Typecho_Widget_Helper_Form_Element_Text(
