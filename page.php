@@ -9,6 +9,7 @@ $this->need('./public/header.php');
     <div class="row">
       <main class="col-12" id="main">
         <div class="post line-numbers">
+          <button id="tocToggleBtn" class="post-toc-toggle-btn">目录</button>
           <h1 class="post-title">
             <?php $this->title() ?>
           </h1>
