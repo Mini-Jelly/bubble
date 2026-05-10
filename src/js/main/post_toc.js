@@ -1,4 +1,3 @@
-// TODO 可能需要加入相应的关闭按钮，以及手机端不显示逻辑
 import { getById } from './global.js';
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -25,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // 6. 为容器设置id并插入html
   tocContainer.id = 'post-toc';
   tocContainer.className = 'post-toc d-none'; // 目录默认隐藏
-  tocContainer.innerHTML = `<div class="post-toc-header">
+  tocContainer.innerHTML = `<div id="post-toc-header" class="post-toc-header">
     <h2>文章目录</h2>
     <button id="tocCloseBtn" class="post-toc-close-btn">❌</button>
     </div>
@@ -70,22 +69,31 @@ document.addEventListener('DOMContentLoaded', function () {
   // 11. 生成目录并插入对应位置（此处示例插入到内容之前，你也可以改为 document.body）
   postContent.parentNode.insertBefore(tocContainer, postContent);
 
-  // 12. 目录可拖拽
-  enableDrag(tocContainer);
+  // 12. 目录可拖拽，仅设置标题区域，防止和css中的resize冲突
+  // 方案1：
+  enableDrag(tocContainer, getById('post-toc-header'));
+  // 方案2：enableDrag(tocContainer,tocContainer.querySelector('#post-toc-header'));
 
-  // 可拖拽函数实现
-  function enableDrag(el) {
+  /**
+   * 可拖拽函数实现
+   * 参数：需要移动的容器，可拖拽的区域
+   */
+  function enableDrag(el, handle) {
     let isDragging = false;
     let offset = { x: 0, y: 0 };
 
-    el.addEventListener('mousedown', (e) => {
+    // 如果未传递handle参数，则使用容器本身触发拖拽监听
+    const dragHandle = handle || el;
+
+    // 监听对应容器的鼠标事件
+    dragHandle.addEventListener('mousedown', (e) => {
       if (e.target.tagName === 'A') return; // 点击链接时不触发拖拽
       isDragging = true;
       offset = {
         x: e.clientX - el.offsetLeft,
         y: e.clientY - el.offsetTop,
       };
-      // el.style.cursor = 'grabbing';
+      e.preventDefault(); // 防止选中文本
     });
 
     document.addEventListener('mousemove', (e) => {
@@ -96,18 +104,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.addEventListener('mouseup', () => {
       isDragging = false;
-      // el.style.cursor = 'grab';
     });
   }
 
   // 13. 现代化API滚动事件监听 (使用 IntersectionObserver)
 
-  /**
-   * 创建交叉观察器实例
-   * 回调函数会在被观察元素进入或离开视口（或达到指定可见度阈值）时触发
-   */
   // 定义目录中的链接，用于添加高亮类名
   const tocLinks = tocList.querySelectorAll('a');
+
+  // 创建交叉观察器实例，回调函数会在被观察元素进入或离开视口（或达到指定可见度阈值）时触发
   const observer = new IntersectionObserver(
     (entries) => {
       // 筛选出所有可见且达到阈值的标题
