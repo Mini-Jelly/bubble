@@ -13,13 +13,14 @@
 
     a {
       color: var(--text1);
-      padding: 7px 0;
+      padding: 7px 5px;
       // 上下居中
       text-align: center;
       align-content: center;
       border-radius: var(--radius);
       background-color: var(--card1);
       box-shadow: var(--box-shadow);
+      word-wrap: break-word;
 
       &:hover {
         color:#fff;
