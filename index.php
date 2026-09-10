@@ -18,11 +18,12 @@ $this->need('./public/header.php'); ?>
   <div class="container">
     <div class="row">
       <main class="col-12 col-lg-10 offset-lg-1">
-        <?php if ($this->currentPage === 1) {
+        <?php if ($this->getCurrentPage() === 1) {
           if ($this->options->swiper) {
             $this->need('./public/swiper.php');
           }
-          if ($this->options->tagCloud === 'on') {
+          // 老用户升级主题后新增配置项为 NULL，直接和 'on' 比较会导致标签云静默消失
+          if (($this->options->tagCloud ?? 'on') === 'on') {
             $this->need('./public/tag_cloud.php');
           }
         }
@@ -32,4 +33,3 @@ $this->need('./public/header.php'); ?>
     </div>
   </div>
   <?php $this->need('./public/footer.php'); ?>
-</body>

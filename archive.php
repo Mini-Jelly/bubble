@@ -23,9 +23,10 @@ $this->need('./public/header.php');
         <?php if ($this->have()): ?>
           <?php $this->need('./public/article.php'); ?>
         <?php else: ?>
-          <h1>
+          <!-- 页面上方已经有 h1（归档标题），这里再出现一个 h1 会破坏标题层级 -->
+          <h2 class="archive-empty">
             抱歉，你搜索的内容未找到，请尝试使用其他关键词搜索。
-          </h1>
+          </h2>
         <?php endif; ?>
         <?php $this->pageNav('&laquo; 前一页', '后一页 &raquo;','2','···'); ?>
       </main>

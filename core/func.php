@@ -2,39 +2,165 @@
 /* 主题函数 */
 
 /**
- * 计算距离上次更新的天数
+ * 计算距离上次更新的自然日天数
  *
  * @param int $modified 最后更新时间的时间戳
- * @return int 返回距离上次更新的天数
+ * @return int 返回距离上次更新的天数，负数按 0 处理
  */
 function getDaysSinceLastModified(int $modified): int
 {
-  $lastModifiedDate = date('Y-m-d', $modified);
-  $currentDate = date('Y-m-d');
-  return round((strtotime($currentDate) - strtotime($lastModifiedDate)) / 86400);
+  // 先归一到当天零点再相减，避免跨时区/夏令时导致的 ±1 天误差
+  $days = (strtotime('today') - strtotime('today', $modified)) / 86400;
+
+  return max(0, (int) round($days));
 }
 
 /**
- * 获取文章封面
+ * 取得「当前归档页自身」的规范链接（供 rel=canonical / og:url 使用）
  *
- * @param object $obj 传入包含文章信息的对象，通常为$this
+ * 注意不能直接用 $this->permalink：
+ * Widget_Archive 会把查出来的文章行压进 $this->row，
+ * 于是首页、分类、日期、搜索这些列表页上它返回的是「最后一篇文章」的地址
+ * （实测首页拿到的是一篇随机文章，喂给 canonical 会直接误导搜索引擎）。
+ *
+ * ⚠️ 本函数是全局作用域函数，只能使用 Widget_Archive 的 public 方法，
+ * 不能读 $archive->options / $archive->currentPage 这两个裸属性：
+ *   - $options 是 protected、$currentPage 是 private；
+ *   - 模板里 $this->options 之所以能用，是因为 need() 定义在 Widget\Archive 里，
+ *     被 include 的模板继承了该类作用域；
+ *   - 一旦离开类作用域（比如传进本函数），读取会落到 Widget::__get()，
+ *     而它只认 row 键 / ___xxx() 魔术方法 / 插件钩子，两者都不满足 → 静默返回 null。
+ * 实测后果：Router::url() 的 prefix 为空，URL 退化成相对路径
+ * （/index.php/page/2/ 拿到 "/"，/index.php/2026/page/2/ 拿到 "/2026/"），
+ * 同时分页判断也会因为 (int)null === 0 而整段失效。
+ *
+ * @param Widget_Archive $archive 归档 Widget，模板中即 $this
+ * @return string 取不到时返回空字符串，由调用方决定兜底
+ */
+function getArchivePermalink($archive): string
+{
+  $archiveType = $archive->getArchiveType();
+
+  // 单篇 / 独立页面 / 附件：permalink 本来就是对的
+  if (in_array($archiveType, ['post', 'page', 'attachment'], true)) {
+    return (string) $archive->permalink;
+  }
+
+  // Typecho 内部已为每种归档算好了「第 1 页」的规范地址：
+  // index → siteUrl，category / tag / author / date / search → Router::url() 的结果。
+  // getArchiveUrl() 是 public 方法，可以放心在类外调用。
+  $baseUrl = (string) $archive->getArchiveUrl();
+
+  // getCurrentPage() 是 public 方法（返回 int），不会踩上面那个坑
+  $page = $archive->getCurrentPage();
+
+  if ($page <= 1) {
+    return $baseUrl !== '' ? $baseUrl : (string) Helper::options()->siteUrl;
+  }
+
+  // 第 2 页起才需要自己拼分页路由
+  $routeMap = [
+    'index'    => 'index_page',
+    'category' => 'category_page',
+    'tag'      => 'tag_page',
+    'author'   => 'author_page',
+    'search'   => 'search_page',
+  ];
+
+  if ('date' === $archiveType) {
+    // 日期归档要按精度细分：年 / 年月 / 年月日，三种分页路由不同。
+    // 注意 pageRow 里的 month / day 在「只到年」时是字符串 "00"，
+    // 必须用 (int) 归一再判断，否则会误判成月归档。
+    $pageRow = $archive->getPageRow();
+    $month = (int) ($pageRow['month'] ?? 0);
+    $day = (int) ($pageRow['day'] ?? 0);
+
+    $route = $day > 0
+      ? 'archive_day_page'
+      : ($month > 0 ? 'archive_month_page' : 'archive_year_page');
+  } elseif (isset($routeMap[$archiveType])) {
+    $route = $routeMap[$archiveType];
+  } else {
+    // front（自定义首页）、404 等未知类型不做处理
+    return $baseUrl;
+  }
+
+  // Router::url 会按路由声明的 params 取值，$pageRow 里多余的键会被忽略
+  $pageRow = $archive->getPageRow();
+  $pageRow['page'] = $page;
+
+  $url = (string) Typecho_Router::url($route, $pageRow, Helper::options()->index);
+
+  return $url !== '' ? $url : $baseUrl;
+}
+
+/**
+ * 取文章正文（请求内缓存）
+ *
+ * Typecho 的 ___content() 既不把结果写回 row，也不做任何缓存：每访问一次
+ * $post->content 就要重跑一次 Markdown / autoP 解析。同一篇文章在同一请求
+ * 里往往会被取多次（SEO 描述、卡片封面与摘要、正文输出……），
+ * 这里按 cid 记一份，保证一篇文章只解析一次。
+ *
+ * @param object $post 文章对象
  * @return string
  */
-function getThumbnailLink($obj): string
+function getPostContent($post): string
 {
-  // 如果文章对象中已经包含了图片链接，则直接返回该链接
-  if ($obj->fields->image)
-    return $obj->fields->image;
+  static $cache = [];
 
-  // 定义匹配图片标签的正则表达式
-  $pattern = '/<img.*?src="(.*?)"[^>]*>/i';
+  $cid = (int) $post->cid;
 
-  // 如果文章内容中存在图片标签，则使用正则表达式匹配获取图片链接
-  if (preg_match($pattern, $obj->content, $matches))
-    return $matches[1];
+  if ($cid <= 0) {
+    return (string) $post->content;
+  }
 
-  //没有图片，返回透明像素顶替，减少判断逻辑
-  return getTransparent1x1GIF();
+  if (!array_key_exists($cid, $cache)) {
+    $cache[$cid] = (string) $post->content;
+  }
+
+  return $cache[$cid];
+}
+
+/**
+ * 一次性计算文章卡片所需的「封面图 + 摘要」
+ *
+ * 之所以把两件事合并到一个函数里，是因为 Typecho 的 ___content() 并不会把结果
+ * 写回 row —— 每一次访问 $post->content 都会重新跑一遍 Markdown / autoP 解析。
+ * 原先「封面」和「摘要」是两个函数，各自取一次正文，首页 10 篇文章
+ * 就是 20 次全文解析。这里统一只取一次。
+ *
+ * @param object $post   文章对象，通常为 $this 或 Widget_Archive 实例
+ * @param int    $length 摘要截取长度
+ * @param string $append 摘要结尾省略字符
+ * @return array{imgUrl: string, excerpt: string}
+ */
+function getArticleCardMedia($post, int $length = 120, string $append = '...'): array
+{
+  // 自定义字段只查询一次（原实现里封面/摘要各查一次）
+  $fields = $post->fields;
+  $image = isset($fields->image) ? (string) $fields->image : '';
+  $excerpt = isset($fields->excerpt) ? (string) $fields->excerpt : '';
+
+  // 封面和摘要都有自定义值时，正文完全没有必要解析
+  $content = ($image === '' || $excerpt === '') ? getPostContent($post) : '';
+
+  if ($image === '') {
+    // 退回正文里的第一张图；仍然没有则用透明像素顶替，减少调用方判断逻辑
+    $image = preg_match('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']+)["\']/i', $content, $matches)
+      ? $matches[1]
+      : getTransparent1x1GIF();
+  }
+
+  if ($excerpt === '') {
+    // 与 Typecho 自身 excerpt 的语义保持一致：只取 <!--more--> 之前的部分
+    $excerpt = strip_tags(explode('<!--more-->', $content, 2)[0]);
+  }
+
+  return [
+    'imgUrl'  => $image,
+    'excerpt' => Typecho_Common::subStr($excerpt, 0, $length, $append),
+  ];
 }
 
 /**
@@ -45,16 +171,6 @@ function getThumbnailLink($obj): string
 function getTransparent1x1GIF(): string
 {
   return "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
-}
-
-/**
- * 获取1x1的黑色遮罩(base64编码)图片链接
- *
- * @return string
- */
-function get1x1Shade(): string
-{
-  return "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkMAYAADkANVKH3ScAAAAASUVORK5CYII=";
 }
 
 /**
@@ -106,37 +222,43 @@ function memoryUsageRecord(): void
  */
 function renderArticleCard(array $data): string
 {
-  // 初始化值，值会被NULL覆盖，所以填什么值都没什么用
-  $defaults = [
-    'imgUrl'     => '',
-    'title'      => '',
-    'excerpt'    => '',
-    'category'   => [],
-    'time'       => '',
-    'permalink'  => '#',
-  ];
-  // 将函数传递过来的数据覆盖当前默认值
-  $data = array_merge($defaults, $data);
-  // 将data变量导入当前域，用来给模板传递数据
-  extract($data);
-  // 记录当前缓冲区层级
-  $initialLevel = ob_get_level();
-  // 开启新的缓冲区
-  ob_start();
-  // 检查模板文件是否存在
+  // 默认值只用来兜住缺失的键（null 会覆盖默认值，因此允许显式传 null）
+  $data = array_merge([
+    'imgUrl'    => '',
+    'title'     => '',
+    'excerpt'   => '',
+    'category'  => [],
+    'time'      => '',
+    'permalink' => '#',
+  ], $data);
+
+  // 显式解构出模板需要的变量。原先用 extract() 会把 $data / $templatePath
+  // 这类内部变量一起炸进作用域，模板里一旦出现同名键就会互相覆盖。
+  ['imgUrl' => $imgUrl, 'title' => $title, 'excerpt' => $excerpt,
+    'category' => $category, 'time' => $time, 'permalink' => $permalink] = $data;
+
   $templatePath = dirname(__DIR__) . '/template/article_card.php';
-  if (!file_exists($templatePath)) {
-    return '❌ 模板文件不存在: ' . $templatePath;
+
+  // 模板缺失属于部署错误：写日志即可，不要把服务器绝对路径回显到页面上
+  if (!is_file($templatePath)) {
+    error_log('[bubble] 文章卡片模板缺失: ' . $templatePath);
+    return '<!-- bubble: template/article_card.php 不存在 -->';
   }
-  // 包含模板
-  include $templatePath;
-  // 获取当前缓冲区内容
-  $html = ob_get_clean();
-  // 恢复到初始缓冲区层级（避免影响外部）
-  while (ob_get_level() > $initialLevel) {
-    ob_end_clean();
+
+  $initialLevel = ob_get_level();
+  ob_start();
+
+  try {
+    include $templatePath;
+    // 正常路径：取走缓冲区内容
+    return (string) ob_get_clean();
+  } catch (Throwable $e) {
+    // 异常路径：先清理自己开的缓冲区，否则残留的输出缓冲区会吞掉整个页面后续输出
+    while (ob_get_level() > $initialLevel) {
+      ob_end_clean();
+    }
+    throw $e;
   }
-  return $html;
 }
 
 /**
@@ -183,32 +305,4 @@ function wrapContentImages(string $content, string $fallbackAlt = ''): string
       $alt
     );
   }, $content);
-}
-
-/**
- * 获取文章摘要
- * @param object $post 文章对象，通常为$this
- * @param int $length 截取摘要的长度
- * @param string $append 文章摘要结尾省略字符
- * @return string HTML 字符串
- */
-function getArticleExcerpt($post, $length = 120, $append = '...'): string
-{
-  $excerpt = '';
-
-  // 检查是否有自定义摘要字段
-  if (isset($post->fields->excerpt) && !empty($post->fields->excerpt)) {
-    $excerpt = $post->fields->excerpt;
-  } elseif (!empty($post->excerpt)) {
-    // 如果有 <!--more--> 分割的内容
-    $excerpt = $post->excerpt;
-  } else {
-    // 从完整内容中提取
-    $excerpt = $post->content;
-  }
-
-  // 清理 HTML 标签并截取
-  $excerpt = strip_tags($excerpt);
-  //Typecho_Common::subStr 是 Typecho 框架内置的一个字符串截取方法
-  return Typecho_Common::subStr($excerpt, 0, $length, $append);
 }

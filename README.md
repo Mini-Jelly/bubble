@@ -39,6 +39,17 @@
 
 ## 😮如何使用
 
+> ⚠️ **直接 `git clone` 得到的仓库里没有 `dist/`。**
+> 主题运行时依赖 `dist/main.min.css`、`dist/main.min.js` 等构建产物，
+> 而 `dist/` 被 `.gitignore` 排除了。克隆后**必须**先执行下面两步，否则页面会完全失去样式：
+>
+> ```bash
+> npm install
+> npm run build
+> ```
+>
+> 如果只是想安装使用，请下载右侧的发行版压缩包（已包含 `dist/`），解压到 `usr/themes/` 下即可。
+
 蓝奏云下载压缩包，解压到你的主题theme目录下即可，或者点击右边的发行版下载
 
 ## 🎮二次开发
@@ -62,6 +73,8 @@ npm install
 4. 构建项目
 
 使用`npm run build`命令构建项目（可以参考package.json）
+
+> 打包发布时必须带上 `dist/` 目录；`dist/` 是运行时依赖，不是可选的缓存。
 
 ### ✏开发规范（仅适用于本项目）
 

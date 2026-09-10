@@ -1,3 +1,4 @@
+<?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
 <?php
 $swiper = [];
 // 兼容 CRLF / LF / CR 三种换行，原先只按 \r\n 切会导致 LF 配置整段粘成一行

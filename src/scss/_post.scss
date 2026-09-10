@@ -7,8 +7,10 @@
   word-wrap: break-word;
   position: relative;
 
-  a {
-    color: var(--theme-9);
+  // 只作用于正文内的链接。原先写的是 .post a，会连目录、标签这些结构元素一起命中，
+  // 最后不得不用一串 !important 去反制
+  &-content a {
+    color: var(--link);
   }
 
   ul {
@@ -87,7 +89,7 @@
       a {
         display: block;
         text-decoration: none;
-        color: var(--text1) !important; //链接属性颜色影响视觉，强制使用文本颜色
+        color: var(--text1); // 目录链接跟随正文文本色，而不是正文链接色
         padding: .2em;
         margin: .1em 0;
         border-radius: var(--radius);
@@ -95,13 +97,13 @@
 
         &:hover {
           background-color: var(--theme-5);
-          color: #fff !important; // 由于上面用了important，要使得该属性生效也要使用
+          color: #fff;
           cursor: pointer;
         }
 
         &.active {
           background-color: var(--theme-8);
-          color: #fff !important; // 由于上面用了important，要使得该属性生效也要使用
+          color: #fff;
         }
       }
     }
@@ -188,10 +190,11 @@
       padding: 0.3125rem;
       background-color: var(--card2);
       margin-right: 0.625rem;
+      color: var(--link);
 
       &:hover {
         background-color: var(--theme-8);
-        color: #fff !important;
+        color: #fff;
       }
     }
   }

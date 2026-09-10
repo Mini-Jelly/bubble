@@ -1,6 +1,10 @@
 import { getById } from './global.js';
 
 document.addEventListener('DOMContentLoaded', function () {
+  // 0. 主题设置里关闭「文章目录」时，页面不会输出这个按钮，直接不做任何事
+  const tocToggleBtn = getById('tocToggleBtn');
+  if (!tocToggleBtn) return;
+
   // 1. 拿到对应的内容容器，对应post.php中的class="post-content"
   const postContent = document.querySelector('.post-content');
   if (!postContent) return; // 应对拿不到的情况
@@ -79,31 +83,34 @@ document.addEventListener('DOMContentLoaded', function () {
    * 参数：需要移动的容器，可拖拽的区域
    */
   function enableDrag(el, handle) {
-    let isDragging = false;
     let offset = { x: 0, y: 0 };
 
     // 如果未传递handle参数，则使用容器本身触发拖拽监听
     const dragHandle = handle || el;
 
+    const onMouseMove = (e) => {
+      el.style.left = e.clientX - offset.x + 'px';
+      el.style.top = e.clientY - offset.y + 'px';
+    };
+
+    const onMouseUp = () => {
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    };
+
     // 监听对应容器的鼠标事件
     dragHandle.addEventListener('mousedown', (e) => {
       if (e.target.tagName === 'A') return; // 点击链接时不触发拖拽
-      isDragging = true;
       offset = {
         x: e.clientX - el.offsetLeft,
         y: e.clientY - el.offsetTop,
       };
       e.preventDefault(); // 防止选中文本
-    });
 
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      el.style.left = e.clientX - offset.x + 'px';
-      el.style.top = e.clientY - offset.y + 'px';
-    });
-
-    document.addEventListener('mouseup', () => {
-      isDragging = false;
+      // 只在拖拽期间挂载监听，松手立刻解绑。
+      // 原先挂在 document 上且永不移除，等于全站每次 mousemove 都要回调一次。
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
     });
   }
 
@@ -165,17 +172,16 @@ document.addEventListener('DOMContentLoaded', function () {
       e.preventDefault();
       const targetId = e.target.getAttribute('href');
       const targetElement = document.querySelector(targetId);
+      if (!targetElement) return;
 
       // 使用 getBoundingClientRect 计算精确位置，兼容 fixed 定位容器
       const elementTop =
         targetElement.getBoundingClientRect().top + window.scrollY;
 
-      if (targetElement) {
-        window.scrollTo({
-          top: elementTop - 20,
-          behavior: 'smooth',
-        });
-      }
+      window.scrollTo({
+        top: elementTop - 20,
+        behavior: 'smooth',
+      });
     }
   });
 
@@ -186,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
   // 17. 监听按钮点击事件，实现目录打开与关闭
-  getById('tocToggleBtn').addEventListener('click', function () {
+  tocToggleBtn.addEventListener('click', function () {
     const target = getById('post-toc');
     target.classList.toggle('d-none');
   });

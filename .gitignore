@@ -1,6 +1,14 @@
 /node_modules/
 /.vscode/
 /.idea/
+/.workbuddy/
 /dist/
 /package-lock.json
 /src/css
+
+# 构建产物备份与审查临时文件，都不属于主题包
+/dist.bak/
+/.audit-tmp/
+
+# 代码审查报告，不属于主题包（发布前请勿打包进去）
+/AUDIT.md

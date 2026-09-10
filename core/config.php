@@ -62,11 +62,16 @@ function themeConfig($form)
   $form->addInput($openInNewWindow);
 
   /* 轮播图 */
+  // 默认值必须是完整 URL。原先写的是 usr/themes/bubble/... 这种相对路径，
+  // 在文章页、非根目录安装等场景下会解析到错误的地址（图片直接 404）。
+  $swiperDefaultImage1 = Helper::options()->themeUrl('assets/img/swiper/s1.png');
+  $swiperDefaultImage2 = Helper::options()->themeUrl('assets/img/swiper/s2.png');
+  $swiperDefaultSiteUrl = Helper::options()->siteUrl();
   $swiper = new Typecho_Widget_Helper_Form_Element_Textarea(
     'swiper',
     NULL,
-    'usr/themes/bubble/assets/img/swiper/s1.png||https://jjj8.top||勾勾勾8点拓
-        usr/themes/bubble/assets/img/swiper/s2.png||https://jjj8.top||广告招租位',
+    $swiperDefaultImage1 . '||' . $swiperDefaultSiteUrl . '||广告招租位' . "\r\n"
+      . $swiperDefaultImage2 . '||' . $swiperDefaultSiteUrl . '||广告招租位',
     '轮播图',
     '介绍：用于在首页展示轮播图 <br />
         格式：图片链接 || 跳转链接 || 跳转文字 <br />
@@ -166,4 +171,18 @@ function themeConfig($form)
   );
   $recentUpdatePosts->setAttribute('class', 'bubble-option Dev');
   $form->addInput($recentUpdatePosts);
+
+  /* 页脚显示页面耗时 / 内存占用 */
+  $showPageUsage = new Typecho_Widget_Helper_Form_Element_Select(
+    'showPageUsage',
+    array(
+      'off' => '关闭（默认）',
+      'on' => '开启'
+    ),
+    'off',
+    '显示页面耗时',
+    '介绍：开启后会在页脚输出页面生成耗时与内存占用，仅用于调试，线上请保持关闭'
+  );
+  $showPageUsage->setAttribute('class', 'bubble-option Dev');
+  $form->addInput($showPageUsage);
 } ?>

@@ -25,6 +25,12 @@ $oc-gray-9: #212529;
   --card2: #{$oc-gray-2};
   --border: rgb(0 0 0 / 10%);
   --bg-hover: #{$oc-gray-1};
+  /* 正文内链 / 标签链接 / 评论表单链接统一走 --link。
+     亮色用最深的 theme-9 保证对比度，暗色改用 theme-5（深色底上 theme-9 太暗看不清）。
+     注意两者必须成对定义：var() 取不到值时整条 color 声明会失效，链接会退化成继承色 */
+  --link: var(--theme-9);
+  /* 评论区：#fff9e8 那种淡黄底在深色模式下会变成浅底浅字，必须按模式分别取值 */
+  --comment-author-bg: #fff9e8;
 }
 
 @mixin palette-dark {
@@ -40,6 +46,8 @@ $oc-gray-9: #212529;
   --card2: #{$oc-gray-7};
   --border: rgb(225 225 225 / 15%);
   --bg-hover: #{$oc-gray-7};
+  --link: var(--theme-5);
+  --comment-author-bg: #3f3a2b;
 }
 
 :root {

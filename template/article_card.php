@@ -1,6 +1,7 @@
+<?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
 <?php
 // 卡片模板，只负责将数据放到对应的位置上
-// 没有封面时 getThumbnailLink() 会返回 data:image 占位图，据此判断
+// 没有封面时 getArticleCardMedia() 会返回 data:image 占位图，据此判断
 $hasImage = strpos($imgUrl, 'data:image') !== 0;
 ?>
 <article class="article-card">
@@ -18,9 +19,10 @@ $hasImage = strpos($imgUrl, 'data:image') !== 0;
 
     <div class="article-card-info">
         <header class="article-card-info-header">
-            <h1>
+            <!-- 列表页会有十几张卡片，这里只能是 h2：用 h1 会让整页标题层级完全乱掉 -->
+            <h2>
                 <a href="<?= htmlspecialchars($permalink) ?>"><?= htmlspecialchars($title) ?></a>
-            </h1>
+            </h2>
         </header>
 
         <div class="article-card-info-excerpt">

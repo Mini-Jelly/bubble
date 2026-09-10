@@ -19,11 +19,16 @@
       <a href="<?= $this->options->siteUrl(); ?>"><?= $this->options->title(); ?></a>
       Power by <a href="https://www.typecho.org" target="_blank">Typecho</a>
     </p>
-    <p>
-      <?php $usageInfo = getPageUsage();
-      echo '页面生成时间:' . $usageInfo['page_generation_time']
-        . ' 消耗内存:' . $usageInfo['memory_consumed']; ?>
-    </p>
+    <?php
+    // 页面耗时 / 内存占用属于调试信息，默认不再对外输出。
+    // 需要排查性能时到「开发者选项」里把「显示页面耗时」打开。
+    if (($this->options->showPageUsage ?? 'off') === 'on'):
+      $usageInfo = getPageUsage(); ?>
+      <p>
+        页面生成时间:<?= $usageInfo['page_generation_time'] ?>
+        消耗内存:<?= $usageInfo['memory_consumed'] ?>
+      </p>
+    <?php endif; ?>
     <?php if($this->options->ICP){?>
       <p>备案号：<a href="https://beian.miit.gov.cn"><?= $this->options->ICP?></a></p>
     <?php } ?>

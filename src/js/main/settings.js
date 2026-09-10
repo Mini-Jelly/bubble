@@ -39,11 +39,8 @@ class SettingsManager {
     this.menu.addEventListener('click', (e) => {
       const listItem = e.target.closest("li[role='menuitem']");
       if (!listItem) return;
-      const value = listItem.dataset.value;
-      const settingKey = this.getSettingKeyFromValue(value);
-      if (!settingKey) return;
-
-      this.applySetting(settingKey, value);
+      // 菜单项本身已带 data-setting-key，无需再用 value 反查属于哪个设置
+      this.applySetting(listItem.dataset.settingKey, listItem.dataset.value);
     });
 
     // 监听系统主题变化（仅 auto 模式生效）
@@ -54,15 +51,6 @@ class SettingsManager {
           this.applySetting('theme', 'auto');
         }
       });
-  }
-
-  getSettingKeyFromValue(value) {
-    for (const [key, config] of Object.entries(SETTINGS)) {
-      if (config.options.some((opt) => opt.value === value)) {
-        return key; // 返回找到的设置项的键名，例如 'theme'
-      }
-    }
-    return null;
   }
 
   applySetting(settingKey, value, saveToStorage = true) {
@@ -111,8 +99,8 @@ class SettingsManager {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  // 1. 初始化设置管理器
-  const settingsManager = new SettingsManager();
+  // 1. 初始化设置管理器（实例内部已完成绑定，无需持有引用）
+  new SettingsManager();
 
   const nav = getById('nav');
 

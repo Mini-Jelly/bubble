@@ -1,7 +1,5 @@
 const path = require("path");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const TerserPlugin = require("terser-webpack-plugin");
-const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 
 module.exports = {
   mode: "development",
@@ -42,12 +40,11 @@ module.exports = {
       filename: "../dist/[name].min.css", // 提取的 CSS 文件名
     }),
   ],
-  devtool: "source-map", // 生产环境下生成 SourceMap，方便调试
+  devtool: "source-map", // 生成 SourceMap，方便调试
   // 开发服务器
   devServer: {
     host: "localhost", // 启动服务器域名
-    port: "3000", // 启动服务器端口号
+    port: 3000, // 启动服务器端口号
     open: true, // 是否自动打开浏览器
   },
-  watch: process.env.NODE_ENV === "development", // 仅在开发环境启用 watch
 };

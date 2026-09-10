@@ -7,7 +7,7 @@
 
   &-form {
     a{
-      color: var(--theme-9);
+      color: var(--link);
     } 
 
     textarea,
@@ -81,18 +81,21 @@
     li {
       margin: 10px 0;
       padding: 14px;
-      border: 1px solid #eee;
+      // 原先是硬编码 #eee / #f6f6f3 / #fff / #fff9e8 / #444 / #999，
+      // 深色模式下浅底浅字几乎不可读，统一换成随 color-scheme 变化的变量
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
 
       .comment-level-odd {
-        background: #f6f6f3;
+        background: var(--bg-hover);
       }
 
       .comment-level-even {
-        background: #fff;
+        background: var(--card1);
       }
 
       .comment-by-author {
-        background: #fff9e8;
+        background: var(--comment-author-bg);
       }
 
       .comment-reply {
@@ -103,13 +106,13 @@
 
     .respond {
       margin-top: 15px;
-      border-top: 1px solid #eee;
+      border-top: 1px solid var(--border);
     }
   }
 
   &-meta {
     a {
-      color: #999;
+      color: var(--text2);
       font-size: 0.9rem;
     }
   }
@@ -117,7 +120,7 @@
   &-author {
     display: block;
     margin-bottom: 3px;
-    color: #444;
+    color: var(--text1);
 
     .avatar {
       float: left;

@@ -7,8 +7,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const clearBtn = getById("nav-form-clean");
 
   // 添加图标
-  const addIcon = (category_list) => {
-    category_list.forEach((item) => {
+  const addIcon = (categoryList) => {
+    categoryList.forEach((item) => {
       if (item.childElementCount > 1) {
         item.classList.add("category-list-icon");
         const nestedItems = item.querySelectorAll("li");
@@ -21,17 +21,13 @@ document.addEventListener("DOMContentLoaded", () => {
   addIcon(categoryList);
 
   // 搜索框逻辑
-  let isClearBtnVisible = false;
   inputField.addEventListener("input", () => {
-    const hasInput = inputField.value.length > 0;
-    clearBtn.style.display = hasInput ? "inline-block" : "none";
-    isClearBtnVisible = hasInput;
+    clearBtn.style.display = inputField.value.length > 0 ? "inline-block" : "none";
   });
 
   clearBtn.addEventListener("click", () => {
     inputField.value = "";
     clearBtn.style.display = "none";
-    isClearBtnVisible = false;
   });
 
   inputField.addEventListener("focus", () => searchSubmit.classList.add("rotate"));

@@ -17,7 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
             navigator.clipboard.writeText(href);
             alert("RSS地址已复制到剪贴板");
 
-        } catch (err) {
+        } catch {
             alert("RSS地址复制失败，请手动使用右键复制");
         }
     };

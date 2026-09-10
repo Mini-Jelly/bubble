@@ -8,7 +8,8 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const swiper = new Swiper(".swiper", {
+  // 实例创建后无需保留引用（后续没有调用任何 swiper API）
+  new Swiper(".swiper", {
     modules: [Pagination, Autoplay, EffectFade],
     pagination: {
       el: '.swiper-pagination',
