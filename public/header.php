@@ -40,8 +40,26 @@ if ($this->options->openInNewWindow === 'on') { ?>
   <base target="_blank" />
 <?php } ?>
 <script>
-  // 主题设置：设置默认主题颜色
-  const html = document.documentElement;
-  html.setAttribute('theme', '<?= $this->options->themeColor; ?>');
+  /* 必须在首屏绘制前把三个属性写全，否则 CSS 变量取不到值会闪白：
+     theme           主题色    —— 服务端输出
+     color-scheme    明暗模式  —— 跟随本地存储，缺省随系统
+     font-size-mode  字号      —— 跟随本地存储
+     这三个变量的默认值需与 src/js/main/settings.js 中的 SETTINGS 保持一致 */
+  (function () {
+    var html = document.documentElement;
+    html.setAttribute('theme', '<?= htmlspecialchars((string) $this->options->themeColor ?: 'blue', ENT_QUOTES, 'UTF-8') ?>');
+
+    var mode = localStorage.getItem('theme');
+    if (mode !== 'light' && mode !== 'dark') {
+      mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    html.setAttribute('color-scheme', mode);
+
+    var fontSize = localStorage.getItem('font-size');
+    html.setAttribute(
+      'font-size-mode',
+      fontSize === 's' || fontSize === 'm' || fontSize === 'l' || fontSize === 'xl' ? fontSize : 'm'
+    );
+  })();
 </script>
 </head>
