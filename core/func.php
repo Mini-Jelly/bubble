@@ -140,6 +140,51 @@ function renderArticleCard(array $data): string
 }
 
 /**
+ * 将正文里的 <img> 包装成 spotlight 灯箱链接
+ *
+ * 同时负责把图片改为 lazysizes 懒加载（data-src）。
+ *
+ * @param string $content     已渲染的文章正文
+ * @param string $fallbackAlt 图片缺少 alt 时使用的兜底文本，通常传文章标题
+ * @return string
+ */
+function wrapContentImages(string $content, string $fallbackAlt = ''): string
+{
+  // 匹配整个 img 标签（[^>] 天然支持跨行，无需 s 修饰符）
+  return preg_replace_callback('/<img\b[^>]*>/i', function ($matches) use ($fallbackAlt) {
+    $imgTag = $matches[0];
+
+    // 已经是懒加载图片（例如被其它插件处理过），不重复包装
+    if (stripos($imgTag, 'lazyload') !== false) {
+      return $imgTag;
+    }
+
+    // 取不到 src 时保持原样
+    if (!preg_match('/\bsrc\s*=\s*["\']([^"\']+)["\']/i', $imgTag, $srcMatch)) {
+      return $imgTag;
+    }
+
+    // 保留图片自身的 alt，只有缺失时才回退到文章标题，
+    // 否则整篇文章所有图片共用一个 alt，对 SEO 和无障碍都是负优化
+    $alt = preg_match('/\balt\s*=\s*["\']([^"\']*)["\']/i', $imgTag, $altMatch)
+      ? $altMatch[1]
+      : $fallbackAlt;
+
+    $url = htmlspecialchars($srcMatch[1], ENT_QUOTES, 'UTF-8');
+    $alt = htmlspecialchars($alt, ENT_QUOTES, 'UTF-8');
+
+    return sprintf(
+      '<a href="%s" class="spotlight" data-title="false">' .
+        '<img class="lazyload" data-src="%s" alt="%s" title="点击放大图片">' .
+        '</a>',
+      $url,
+      $url,
+      $alt
+    );
+  }, $content);
+}
+
+/**
  * 获取文章摘要
  * @param object $post 文章对象，通常为$this
  * @param int $length 截取摘要的长度

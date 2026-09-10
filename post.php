@@ -21,11 +21,7 @@ $this->need('./public/header.php');
             echo "本文最后更新于 " . date('Y-m-d', $modified) . "，超过 $daysSinceLastModified 天未更新"; ?>
           </p>
           <div class="post-content">
-            <?php
-            $pattern = '/<img.*?src=\"(.*?)\"[^>]*>/i';
-            $replacement = '<a href="$1" class="spotlight" data-title="false"><img class="lazyload" data-src="$1" alt="' . $this->title . '" title="点击放大图片" ></a>';
-            $content = preg_replace($pattern, $replacement, $this->content);
-            echo $content; ?>
+            <?php echo wrapContentImages($this->content, $this->title); ?>
             <?php if (count($this->tags) !== 0) { ?>
               <div class="post-tags">
                 标签：<?php $this->tags('', true, 'none'); ?>
