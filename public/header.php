@@ -1,7 +1,8 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__'))
   exit; ?>
-<!DOCTYPE HTML>
-<html lang="zh-cn">
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
 <meta charset="<?php $this->options->charset(); ?>">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta property="og:url" content="<?php $this->permalink(); ?>">

@@ -31,5 +31,4 @@ $this->need('./public/header.php');
       </main>
     </div>
   </div>
-</body>
 <?php $this->need('./public/footer.php'); ?>
