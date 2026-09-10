@@ -28,11 +28,12 @@ module.exports = {
     main: "./src/entry/main.js",
     theme_config: "./src/entry/theme_config.js",
     swiper: "./src/entry/swiper.js",
-    lazysizes:"./src/entry/lazysizes.js",
   },
   output: {
     path: path.resolve(__dirname, "../dist"),
     filename: "[name].min.js", // 输出的 JS 文件名
+    // 动态 import 切出的 chunk（如按需加载的 Prism）同样保持 .min.js 命名
+    chunkFilename: "[name].min.js",
     clean: true, // 启用自动清理输出目录
   },
   module: {

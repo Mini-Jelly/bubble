@@ -1,15 +1,18 @@
 <?php
 // 卡片模板，只负责将数据放到对应的位置上
+// 没有封面时 getThumbnailLink() 会返回 data:image 占位图，据此判断
+$hasImage = strpos($imgUrl, 'data:image') !== 0;
 ?>
 <article class="article-card">
     <div class="article-card-image">
-        <?php
-        // 如果没有图片的话，默认是设置一个data:image的，只需要判断这个就能得知有没有图片
-        if (substr($imgUrl, 0, 10) === 'data:image'): ?>
-            <div class="no-image"></div>
-        <?php endif; ?>
         <a href="<?= htmlspecialchars($permalink) ?>" title="<?= htmlspecialchars($title) ?>">
-            <img class="lazyload" src="<?= htmlspecialchars($imgUrl) ?>" data-src="<?= htmlspecialchars($imgUrl) ?>" alt="<?= htmlspecialchars($title) ?>">
+            <?php if ($hasImage): ?>
+                <!-- width/height 用于预留位置，避免图片加载后布局跳动（CLS） -->
+                <img src="<?= htmlspecialchars($imgUrl) ?>" loading="lazy" decoding="async"
+                    width="266" height="169" alt="<?= htmlspecialchars($title) ?>">
+            <?php else: ?>
+                <div class="no-image" aria-hidden="true"></div>
+            <?php endif; ?>
         </a>
     </div>
 

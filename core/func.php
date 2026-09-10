@@ -142,7 +142,8 @@ function renderArticleCard(array $data): string
 /**
  * 将正文里的 <img> 包装成 spotlight 灯箱链接
  *
- * 同时负责把图片改为 lazysizes 懒加载（data-src）。
+ * 图片统一使用原生 loading="lazy"（现代浏览器均已支持，老浏览器会退化为
+ * 立即加载，不会出错），因此不再依赖 lazysizes。
  *
  * @param string $content     已渲染的文章正文
  * @param string $fallbackAlt 图片缺少 alt 时使用的兜底文本，通常传文章标题
@@ -154,8 +155,8 @@ function wrapContentImages(string $content, string $fallbackAlt = ''): string
   return preg_replace_callback('/<img\b[^>]*>/i', function ($matches) use ($fallbackAlt) {
     $imgTag = $matches[0];
 
-    // 已经是懒加载图片（例如被其它插件处理过），不重复包装
-    if (stripos($imgTag, 'lazyload') !== false) {
+    // 已被其它插件处理过（带 loading 属性或已包进 <a>），不重复包装
+    if (stripos($imgTag, 'loading=') !== false) {
       return $imgTag;
     }
 
@@ -175,7 +176,7 @@ function wrapContentImages(string $content, string $fallbackAlt = ''): string
 
     return sprintf(
       '<a href="%s" class="spotlight" data-title="false">' .
-        '<img class="lazyload" data-src="%s" alt="%s" title="点击放大图片">' .
+        '<img src="%s" loading="lazy" decoding="async" alt="%s" title="点击放大图片">' .
         '</a>',
       $url,
       $url,

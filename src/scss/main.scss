@@ -164,28 +164,40 @@ body {
   background-color: var(--body);
 }
 
+/* HarmonyOS Sans SC（字重均为 400）按码位切成了三片子集。
+   此前三条 @font-face 的 family / weight / style 完全相同且没有 unicode-range，
+   浏览器只会采用最后一条，另外两片等于白放（约 238KB）。
+   加上互不重叠的 unicode-range 后，浏览器只下载页面真正用到的分片：
+   纯英文 / 标点页面只需 7.9KB 的 us117。 */
 @font-face {
   font-family: "us3117";
   src: url("../woff2/us117.woff2") format("woff2");
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
+  /* ASCII + 常用中英文标点 */
+  unicode-range: U+21-7E, U+B7, U+2014, U+201C-201D, U+2026,
+    U+300A-300B, U+3010-3011, U+FF01, U+FF08-FF09, U+FF1A-FF1B, U+FF1F, U+FFE5;
 }
 
 @font-face {
   font-family: "us3117";
   src: url("../woff2/1900_1.woff2") format("woff2");
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
+  /* CJK 前半段 */
+  unicode-range: U+4E00-707F;
 }
 
 @font-face {
   font-family: "us3117";
   src: url("../woff2/1600_2.woff2") format("woff2");
-  font-weight: normal;
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
+  /* CJK 后半段 */
+  unicode-range: U+7089-9F9F;
 }
 
 // 分页器，分页器在手机页面下可以左右滚动，适配了无限个分页
@@ -227,17 +239,6 @@ body {
       }
     }
   }
-}
-
-/* 针对图像未加载出来时，不显示 */
-.lazyload,
-.lazyloading {
-  opacity: 0;
-}
-
-.lazyloaded {
-  opacity: 1;
-  transition: opacity 0.4s;
 }
 
 .d-none {

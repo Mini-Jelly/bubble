@@ -10,15 +10,20 @@
   &-image {
     align-self: center;
     position: relative;
+    flex: 0 0 auto;
 
+    // 固定封面区域的尺寸：既给图片预留位置（避免 CLS），
+    // 也让无封面时的 "No Image" 占位块有可撑开的盒子
     a {
-      display: flex;
+      display: block;
       position: relative;
+      width: 266px;
+      height: 169px;
 
       img {
         object-fit: cover;
-        width: 266px;
-        height: 169px;
+        width: 100%;
+        height: 100%;
         border-radius: var(--radius);
       }
     }
