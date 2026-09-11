@@ -174,6 +174,25 @@ function getTransparent1x1GIF(): string
 }
 
 /**
+ * 判断封面地址是不是「没有封面」的占位图
+ *
+ * getArticleCardMedia() 在文章没有任何图片时会退回一张 1x1 透明 GIF
+ * （data:image 开头的 base64），好处是调用方不必到处判空。但真正需要
+ * 「要一张能看的封面」的场景（卡片渲染、og:image），还是得把占位图挑出来。
+ *
+ * 原先两处都裸写 strpos($url, 'data:image') !== 0 —— 一个否定式 strpos
+ * 配 if，读起来要先在脑子里取两次反，很容易看错。这里给这个判断一个
+ * 说得出口的名字，调用方写 !isPlaceholderImage($url) 即可自解释。
+ *
+ * @param string $url 封面地址
+ * @return bool true = 空地址或占位图，即没有可展示的封面
+ */
+function isPlaceholderImage(string $url): bool
+{
+  return '' === $url || 0 === strpos($url, 'data:image');
+}
+
+/**
  * 把配置里填写的资源地址补全成可直接使用的绝对地址
  *
  * 背景：轮播图这类配置项允许写相对路径。而相对路径的解析基准是「当前页面的

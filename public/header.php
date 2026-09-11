@@ -29,8 +29,8 @@ if ($isSingle) {
   if ($media['excerpt'] !== '') {
     $pageDescription = $media['excerpt'];
   }
-  // data:image 是占位图，不能作为分享封面
-  if (strpos($media['imgUrl'], 'data:image') !== 0) {
+  // 占位图不能作为分享封面
+  if (!isPlaceholderImage($media['imgUrl'])) {
     $shareImage = $media['imgUrl'];
   }
 }

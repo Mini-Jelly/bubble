@@ -1,13 +1,15 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
 <?php
 // 卡片模板，只负责将数据放到对应的位置上
-// 没有封面时 getArticleCardMedia() 会返回 data:image 占位图，据此判断
-$hasImage = strpos($imgUrl, 'data:image') !== 0;
+// 无封面时 getArticleCardMedia() 会退回 1x1 透明占位图，据此判断有没有可展示的封面。
+// 变量名从 hasImage 改成 hasCoverImage：原名字容易被读成「图片字段非空」，
+// 而这里真正的语义是「存在一张能显示的封面」，跟 if 搭配时尤其容易误读。
+$hasCoverImage = !isPlaceholderImage($imgUrl);
 ?>
 <article class="article-card">
     <div class="article-card-image">
         <a href="<?= htmlspecialchars($permalink) ?>" title="<?= htmlspecialchars($title) ?>">
-            <?php if ($hasImage): ?>
+            <?php if ($hasCoverImage): ?>
                 <!-- width/height 用于预留位置，避免图片加载后布局跳动（CLS） -->
                 <img src="<?= htmlspecialchars($imgUrl) ?>" loading="lazy" decoding="async"
                     width="266" height="169" alt="<?= htmlspecialchars($title) ?>">
