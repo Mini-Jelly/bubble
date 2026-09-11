@@ -170,6 +170,21 @@
     li {
       display: inline-block;
     }
+
+    /* 作者 / 分类链接的颜色。
+       历史遗留：c6ea71a 把原先覆盖整个 .post 的 `a { color }` 收窄成了
+       `.post-content a`，这两条链接因此失去唯一的颜色来源，直接落到浏览器
+       默认的 -webkit-link（未访问蓝 #0000EE、已访问紫 #551A8B）。
+       main.scss 的全局重置只处理了 text-decoration，不处理 color，所以要补在作用域内。
+       色值沿用 --link，与正文内链、标签链接保持同一套语义。 */
+    a {
+      color: var(--link);
+      transition: color 0.2s ease;
+
+      &:hover {
+        color: var(--theme-5);
+      }
+    }
   }
 
   // 文章最后修改的时间
