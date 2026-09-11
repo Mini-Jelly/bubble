@@ -1,0 +1,19 @@
+# 跨编辑器统一缩进与行尾，避免「只改一行、整个文件都算改动」的伪 diff。
+# 仓库内文件由 git 统一存为 LF（core.autocrlf=true），检出到 Windows 时会变回 CRLF，
+# 这是预期行为，与下面的 end_of_line = lf 不冲突。
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.md]
+# Markdown 里行尾两个空格是「强制换行」的语法，不能裁
+trim_trailing_whitespace = false
+
+[*.{yml,yaml}]
+indent_size = 2

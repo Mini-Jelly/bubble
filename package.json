@@ -1,20 +1,25 @@
 {
   "name": "bubble",
   "version": "1.1.0",
-  "description": "fast",
+  "description": "轻量、明暗自适应、零 jQuery 的 Typecho 主题",
   "main": "index.js",
   "scripts": {
     "start": "npm run dev",
     "dev": "npx webpack serve --config ./webpack/webpack.dev.js",
     "build": "npx webpack --config ./webpack/webpack.prod.js",
-    "version:sync": "node update_version.js",
-    "version": "node update_version.js && git add index.php",
+    "package": "node scripts/package.js",
+    "version:sync": "node scripts/update_version.js",
+    "version": "node scripts/update_version.js && git add index.php",
     "release:patch": "npm version patch -m \"chore(release): v%s\"",
     "release:minor": "npm version minor -m \"chore(release): v%s\"",
     "release:major": "npm version major -m \"chore(release): v%s\""
   },
-  "keywords": [],
-  "author": "Jelly",
+  "keywords": [
+    "typecho",
+    "typecho-theme",
+    "blog"
+  ],
+  "author": "Mini-Jelly",
   "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.26.0",

@@ -4,11 +4,12 @@
 /.workbuddy/
 /dist/
 /package-lock.json
-/src/css
 
-# 构建产物备份与审查临时文件，都不属于主题包
+# 构建产物备份、审查临时文件、打包中间产物 —— 都不是主题包内容
 /dist.bak/
 /.audit-tmp/
+/.package/
 
-# 代码审查报告，不属于主题包（发布前请勿打包进去）
-/AUDIT.md
+# 说明：docs/ 是进仓库的（维护者要能查到设计决策与历史审查台账），
+#      但「不进发布包」由 scripts/package.js 的白名单保证，不再靠 .gitignore。
+#      .gitignore 只能表达「不进仓库」，表达不了「进仓库但不进发布包」。

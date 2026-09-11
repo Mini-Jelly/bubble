@@ -19,8 +19,8 @@
 const fs = require('fs');
 const path = require('path');
 
-const PKG_PATH = path.join(__dirname, 'package.json');
-const THEME_ENTRY = path.join(__dirname, 'index.php');
+const PKG_PATH = path.join(__dirname, '..', 'package.json');
+const THEME_ENTRY = path.join(__dirname, '..', 'index.php');
 
 /** 取当天日期，格式 YYYYMMDD */
 function today() {
