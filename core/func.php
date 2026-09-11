@@ -362,3 +362,62 @@ function wrapContentImages(string $content, string $fallbackAlt = ''): string
     );
   }, $content);
 }
+
+/**
+ * 读取主题版本号（取 index.php 主题头注释里的 @version）
+ *
+ * index.php 是 Typecho 的主题入口，其头部注释里的 @version 由
+ * update_version.js 从 package.json 同步而来，本来就是版本号的唯一真源。
+ * 这里不另立真源，只做一次解析并缓存。
+ *
+ * @return string 解析失败时返回 '0'，调用方无需判空
+ */
+function getThemeVersion(): string
+{
+  static $version = null;
+
+  if ($version !== null) {
+    return $version;
+  }
+
+  $version = '0';
+  $entry = dirname(__DIR__) . '/index.php';
+
+  if (is_readable($entry)) {
+    // 只读头部 1KB：主题头注释一定在最前面，没必要把整个模板读进内存
+    $head = (string) file_get_contents($entry, false, null, 0, 1024);
+
+    if (preg_match('/@version\s+(\S+)/', $head, $matches)) {
+      $version = $matches[1];
+    }
+  }
+
+  return $version;
+}
+
+/**
+ * 给 dist 下的静态资源生成缓存击穿参数
+ *
+ * 主题更新后文件名不变（始终是 main.min.css），浏览器会长期命中旧产物，
+ * 表现为「明明改了却没生效」，而且很难自查 —— 本轮排查前端问题时，
+ * headless 实例就一直在跑几天前的旧 CSS。
+ *
+ * 组成：版本号 + 文件 mtime
+ *   @version  随发版递增，保证跨版本一定失效
+ *   mtime     每次重新构建都会变，保证同一版本内的多次构建也立刻生效，
+ *             且不需要人工维护任何额外的版本号
+ *
+ * @param string $relativePath 相对主题根目录的路径，如 'dist/main.min.css'
+ * @return string
+ */
+function getAssetVersion(string $relativePath): string
+{
+  $file = dirname(__DIR__) . '/' . ltrim($relativePath, '/');
+
+  // dist/ 尚未构建（例如刚克隆下来的仓库）时退回纯版本号，不要输出 "?v=1.1.0.0"
+  if (!is_file($file)) {
+    return getThemeVersion();
+  }
+
+  return getThemeVersion() . '.' . filemtime($file);
+}
