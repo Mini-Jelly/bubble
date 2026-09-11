@@ -34,6 +34,15 @@
     <?php } ?>
   </div>
 </footer>
+<?php
+// 回到顶部按钮。老用户升级主题时该配置项还是 NULL，所以用 ?? 'on' 兜底
+if (($this->options->backToTop ?? 'on') === 'on'): ?>
+  <button type="button" id="backToTop" class="back-to-top" aria-label="回到顶部">
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="M12 4l8 8h-5v8H9v-8H4z" />
+    </svg>
+  </button>
+<?php endif; ?>
 <?php $this->options->customFooter(); ?>
 <?php $this->footer(); ?>
 </body>

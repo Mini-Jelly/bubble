@@ -7,6 +7,7 @@
 @use "public/article_card.scss"; // 文章卡片
 @use "public/comment.scss"; // 评论区
 @use "public/footer.scss"; // 页脚
+@use "public/back_to_top.scss"; // 回到顶部按钮
 @use "lib/prism.scss"; // 文章代码美化样式
 
 * {

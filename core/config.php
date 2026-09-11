@@ -61,6 +61,20 @@ function themeConfig($form)
   $openInNewWindow->setAttribute('class', 'bubble-option Global');
   $form->addInput($openInNewWindow);
 
+  /* 回到顶部按钮 */
+  $backToTop = new Typecho_Widget_Helper_Form_Element_Select(
+    'backToTop',
+    array(
+      'on' => '显示',
+      'off' => '隐藏',
+    ),
+    'on',
+    '回到顶部按钮',
+    '介绍：滚动超过一屏后，在右下角显示一个回到顶部的按钮'
+  );
+  $backToTop->setAttribute('class', 'bubble-option Global');
+  $form->addInput($backToTop);
+
   /* 轮播图 */
   // ⚠️ Widget\Options::themeUrl() 与 siteUrl() 是「输出」方法，内部是 echo 而不是 return。
   //    在赋值上下文里调用它们，会把 URL 直接打印到设置页面（表现为设置页面上多出一串
