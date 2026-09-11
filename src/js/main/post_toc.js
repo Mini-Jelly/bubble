@@ -28,14 +28,14 @@ document.addEventListener('DOMContentLoaded', function () {
   // 6. 为容器设置id并插入html
   tocContainer.id = 'post-toc';
   tocContainer.className = 'post-toc d-none'; // 目录默认隐藏
-  // 目录面板自身是滚动容器（overflow: auto），长目录会在内部滚动。
-  // 不标记的话，Lenis 会把面板内的滚轮也接管掉，变成滚动正文（滚动穿透）。
-  tocContainer.setAttribute('data-lenis-prevent', '');
+  // 滚动容器下移到了 <ul>：外壳是 flex 列布局（overflow: hidden），
+  // 只有列表本身会滚动。data-lenis-prevent 必须挂在真正滚动的那个元素上，
+  // 否则长目录的滚轮仍会被 Lenis 接管成滚动正文（滚动穿透）。
   tocContainer.innerHTML = `<div id="post-toc-header" class="post-toc-header">
     <h2>文章目录</h2>
     <button id="tocCloseBtn" class="post-toc-close-btn">❌</button>
     </div>
-    <ul id="toc-list"></ul>`;
+    <ul id="toc-list" data-lenis-prevent></ul>`;
 
   // 7. 选中容器内部的目录列表
   const tocList = tocContainer.querySelector('#toc-list');
@@ -76,44 +76,80 @@ document.addEventListener('DOMContentLoaded', function () {
   // 11. 生成目录并插入对应位置（此处示例插入到内容之前，你也可以改为 document.body）
   postContent.parentNode.insertBefore(tocContainer, postContent);
 
-  // 12. 目录可拖拽，仅设置标题区域，防止和css中的resize冲突
-  // 方案1：
+  // 12. 目录可拖拽：只把标题栏当作把手，避免和右下角的缩放手势冲突
   enableDrag(tocContainer, getById('post-toc-header'));
-  // 方案2：enableDrag(tocContainer,tocContainer.querySelector('#post-toc-header'));
 
   /**
-   * 可拖拽函数实现
-   * 参数：需要移动的容器，可拖拽的区域
+   * 让 el 可以按 handle 拖拽移动，并把落点钳制在视口内。
+   *
+   * 为什么必须钳制：面板是 position: fixed，left/top 一旦写成像素值，就脱离了
+   * CSS 里「left: 20px」那套兜底。拖出视口后标题栏点不到，面板等于把自己弄丢，
+   * 只能刷新页面。钳制后无论怎么拖，面板始终完整可见。
+   *
+   * 为什么用 Pointer Events + setPointerCapture 而不是 document 上的 mousemove：
+   * 指针捕获后事件会持续派发给把手，鼠标移出窗口也不会中断拖拽，天然支持触屏，
+   * 也不必再手动往 document 上挂/摘监听。
    */
   function enableDrag(el, handle) {
-    let offset = { x: 0, y: 0 };
-
-    // 如果未传递handle参数，则使用容器本身触发拖拽监听
     const dragHandle = handle || el;
+    if (!dragHandle) return;
 
-    const onMouseMove = (e) => {
-      el.style.left = e.clientX - offset.x + 'px';
-      el.style.top = e.clientY - offset.y + 'px';
+    let pointerId = null;
+    // 按下时缓存一次尺寸：拖拽过程中尺寸不变，没必要每次移动都读一遍布局
+    let size = { width: 0, height: 0 };
+    let offsetX = 0;
+    let offsetY = 0;
+    // 只有真正拖动过才写内联 left/top；否则保持 CSS 的初始定位，
+    // 窗口缩放时也就不会把一个「没人动过」的面板钉死在像素坐标上
+    let hasMoved = false;
+
+    const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+    const place = (left, top) => {
+      const maxLeft = Math.max(0, window.innerWidth - size.width);
+      const maxTop = Math.max(0, window.innerHeight - size.height);
+      el.style.left = `${clamp(left, 0, maxLeft)}px`;
+      el.style.top = `${clamp(top, 0, maxTop)}px`;
     };
 
-    const onMouseUp = () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
+    dragHandle.addEventListener('pointerdown', (event) => {
+      // 只响应鼠标左键；标题栏里的关闭按钮保持原本的点击行为
+      if (event.button !== 0 || event.target.closest('a, button')) return;
+
+      const rect = el.getBoundingClientRect();
+      size = { width: rect.width, height: rect.height };
+      offsetX = event.clientX - rect.left;
+      offsetY = event.clientY - rect.top;
+
+      pointerId = event.pointerId;
+      dragHandle.setPointerCapture(pointerId);
+      event.preventDefault(); // 防止拖拽时选中文字
+    });
+
+    dragHandle.addEventListener('pointermove', (event) => {
+      if (pointerId === null || event.pointerId !== pointerId) return;
+      hasMoved = true;
+      place(event.clientX - offsetX, event.clientY - offsetY);
+    });
+
+    const endDrag = (event) => {
+      if (pointerId === null || event.pointerId !== pointerId) return;
+      // 浏览器可能已自动释放捕获，release 前先确认，避免抛错打断收尾
+      if (dragHandle.hasPointerCapture(pointerId)) {
+        dragHandle.releasePointerCapture(pointerId);
+      }
+      pointerId = null;
     };
 
-    // 监听对应容器的鼠标事件
-    dragHandle.addEventListener('mousedown', (e) => {
-      if (e.target.tagName === 'A') return; // 点击链接时不触发拖拽
-      offset = {
-        x: e.clientX - el.offsetLeft,
-        y: e.clientY - el.offsetTop,
-      };
-      e.preventDefault(); // 防止选中文本
+    dragHandle.addEventListener('pointerup', endDrag);
+    dragHandle.addEventListener('pointercancel', endDrag);
 
-      // 只在拖拽期间挂载监听，松手立刻解绑。
-      // 原先挂在 document 上且永不移除，等于全站每次 mousemove 都要回调一次。
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
+    // 窗口变小后，原落点可能已经落在视口外，重新钳一次
+    window.addEventListener('resize', () => {
+      if (!hasMoved || pointerId !== null) return;
+      const rect = el.getBoundingClientRect();
+      size = { width: rect.width, height: rect.height };
+      place(rect.left, rect.top);
     });
   }
 

@@ -38,26 +38,43 @@
     left: 20px;
     width: 230px;
     height: 75vh;
+
+    /* 外壳做「固定标题栏 + 独立滚动列表」的两段式布局。
+       为什么不用 position: sticky 固定标题栏：sticky 的偏移基准是滚动容器的
+       padding box，标题栏会被顶进 padding 里，得再用负 margin + 补 padding 抵消，
+       滚动时还会在标题栏上方露出一条正文。flex 列布局没有这些问题。 */
+    display: flex;
+    flex-direction: column;
+
     background: var(--card1);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     padding: 0.75rem;
     box-shadow: var(--box-shadow);
-    scrollbar-width: none; // 隐藏滚动条
     z-index: 1000;
-    resize: horizontal;
-    overflow: auto;
+
+    /* 四向缩放。resize 生效的前提是 overflow 不为 visible；滚动已经交给下面的
+       ul，外壳用 hidden 即可。可拖范围由 min-/max- 交给浏览器钳制，拖到边界自动停住。 */
+    resize: both;
+    overflow: hidden;
     min-width: 100px;
     min-height: 100px;
     max-width: 500px;
     max-height: 90vh;
 
     &-header {
-      cursor: move; // 可拖拽提示
+      flex: 0 0 auto; // 不参与伸缩，永远占住顶部
+      cursor: move; // 唯一的拖拽把手
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 5px;
+      user-select: none; // 拖拽时不要顺带选中标题文字
+      touch-action: none; // 触屏上按住标题栏 = 拖拽，而不是滚动页面
+
+      &:active {
+        cursor: grabbing;
+      }
 
       h2 {
         text-align: center;
@@ -65,11 +82,15 @@
       }
     }
 
-    // 重置列表默认样式
+    // 目录列表：整个面板里唯一的滚动容器
     ul {
       list-style: none;
       padding-left: 0;
       margin: 0;
+      flex: 1 1 auto;
+      min-height: 0; // flex 子项默认 min-height: auto，不归零会撑高外壳、永不出现滚动条
+      overflow: auto;
+      scrollbar-width: none; // 隐藏滚动条
     }
 
     &-item {
