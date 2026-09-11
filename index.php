@@ -1,10 +1,11 @@
 <?php
 
 /**
- * bubble Beat 20260509
+ * bubble 1.0.0
  * @package Bubble
  * @author Mini-Jelly
- * @version Beat 20260509
+ * @version 1.0.0
+ * @build 20260911
  * @link https://jjj8.top
  */
 

@@ -76,6 +76,32 @@ npm install
 
 > 打包发布时必须带上 `dist/` 目录；`dist/` 是运行时依赖，不是可选的缓存。
 
+### 🔖版本与发布
+
+版本号遵循[语义化版本](https://semver.org/lang/zh-CN/)，**唯一真源是 `package.json` 的 `version`**。
+主题头 `index.php` 里的 `@version` 由脚本自动同步，`@build` 记录构建日期，
+这两个字段都不要手改。
+
+| 命令 | 用途 |
+| ---- | ---- |
+| `npm run version:sync` | 只把 `package.json` 的版本同步到 `index.php` |
+| `npm run release:patch` | 修订号 +1：向下兼容的问题修复 |
+| `npm run release:minor` | 次版本号 +1：向下兼容的功能新增 |
+| `npm run release:major` | 主版本号 +1：不兼容的改动 |
+
+`release:*` 会依次完成：升版本号 → 同步 `index.php` → 提交 → 打 `vX.Y.Z` 标签。
+推送标签即可在 GitHub 上形成发布点：
+
+```
+git push && git push --tags
+```
+
+发版前请把变更写入 [CHANGELOG.md](./CHANGELOG.md)。
+
+提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/zh-hans/)，
+常用前缀：`feat` 新增、`fix` 修复、`perf` 性能、`refactor` 重构、`docs` 文档、
+`chore` 杂项。**一个提交只做一件事**，便于回溯与回滚。
+
 ### ✏开发规范（仅适用于本项目）
 
 - 所有文件名应当遵循snake_case下划线命名法。

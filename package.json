@@ -6,7 +6,12 @@
   "scripts": {
     "start": "npm run dev",
     "dev": "npx webpack serve --config ./webpack/webpack.dev.js",
-    "build": "npx webpack --config ./webpack/webpack.prod.js"
+    "build": "npx webpack --config ./webpack/webpack.prod.js",
+    "version:sync": "node update_version.js",
+    "version": "node update_version.js && git add index.php",
+    "release:patch": "npm version patch -m \"chore(release): v%s\"",
+    "release:minor": "npm version minor -m \"chore(release): v%s\"",
+    "release:major": "npm version major -m \"chore(release): v%s\""
   },
   "keywords": [],
   "author": "Jelly",
