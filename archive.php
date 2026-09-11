@@ -1,10 +1,10 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__'))
   exit;
-$this->need('./public/header.php');
+$this->need('./views/header.php');
 ?>
 
 <body>
-  <?php $this->need('./public/nav.php'); ?>
+  <?php $this->need('./views/nav.php'); ?>
   <div class="container">
     <div class="row">
       <main class="col-12 col-lg-10 offset-lg-1" id="main">
@@ -21,7 +21,7 @@ $this->need('./public/header.php');
           ); ?>
         </h1>
         <?php if ($this->have()): ?>
-          <?php $this->need('./public/article.php'); ?>
+          <?php $this->need('./views/article.php'); ?>
         <?php else: ?>
           <!-- 页面上方已经有 h1（归档标题），这里再出现一个 h1 会破坏标题层级 -->
           <h2 class="archive-empty">
@@ -32,4 +32,4 @@ $this->need('./public/header.php');
       </main>
     </div>
   </div>
-<?php $this->need('./public/footer.php'); ?>
+<?php $this->need('./views/footer.php'); ?>

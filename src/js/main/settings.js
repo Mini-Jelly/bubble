@@ -9,19 +9,19 @@ import { getById, setHtml } from './global.js';
  * 访客没动过的项一律走后台默认值、不写 localStorage；「恢复默认」= 清掉本机覆盖。
  * 所以后台改配色 / 改字体默认值，对没动过设置的访客是立刻生效的。
  *
- * 首屏不闪的那一半在 public/header.php 的内联阻塞脚本里（它必须在 CSS 生效前
+ * 首屏不闪的那一半在 views/header.php 的内联阻塞脚本里（它必须在 CSS 生效前
  * 就把四个属性写到 <html> 上），这里只负责交互、持久化与控件同步。
  *
  * 新增一个设置项的完整步骤：
  *   1. core/config.php  加后台选项（需要站长可调默认值时）
- *   2. public/fab.php   加一个带 data-setting-key / data-default 的控件
+ *   2. views/fab.php   加一个带 data-setting-key / data-default 的控件
  *   3. 本文件的 SETTINGS 里补一条「存储键 + 落到 html 的属性」
- *   4. public/header.php 的 DEFAULTS / ALLOWED 里补同一个键
+ *   4. views/header.php 的 DEFAULTS / ALLOWED 里补同一个键
  * 控件类型（分段 / 滑条 / 色块）与可取值都由 DOM 自己声明，这里不需要分支。
  */
 
 // 设置项 → localStorage 键 / <html> 上的属性名。
-// 这四个键必须与 public/header.php 的 DEFAULTS 一一对应，改一处必须改两处。
+// 这四个键必须与 views/header.php 的 DEFAULTS 一一对应，改一处必须改两处。
 const SETTINGS = {
   colorScheme: { storageKey: 'theme', attr: 'color-scheme' },
   fontSize: { storageKey: 'font-size', attr: 'font-size-mode' },

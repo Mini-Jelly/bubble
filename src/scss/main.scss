@@ -1,13 +1,13 @@
 @use "color.scss"; // 颜色
 @use "grid.scss"; // 响应式网格
 @use "post.scss"; // 文章
-@use "public/nav.scss"; // 导航栏
-@use "public/tag_cloud.scss"; // 首页标签云
-@use "public/swiper.scss"; // 首页轮播图
-@use "public/article_card.scss"; // 文章卡片
-@use "public/comment.scss"; // 评论区
-@use "public/footer.scss"; // 页脚
-@use "public/fab.scss"; // 右下角悬浮按钮组（个性化设置面板 + 回到顶部）
+@use "views/nav.scss"; // 导航栏
+@use "views/tag_cloud.scss"; // 首页标签云
+@use "views/swiper.scss"; // 首页轮播图
+@use "views/article_card.scss"; // 文章卡片
+@use "views/comment.scss"; // 评论区
+@use "views/footer.scss"; // 页脚
+@use "views/fab.scss"; // 右下角悬浮按钮组（个性化设置面板 + 回到顶部）
 @use "lib/prism.scss"; // 文章代码美化样式
 
 * {
@@ -191,7 +191,7 @@ body {
      1600_2 1600 个字形 U+7089-9F9F */
 @font-face {
   font-family: "us3117";
-  src: url("../woff2/us117.woff2") format("woff2");
+  src: url("../fonts/us117.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -202,7 +202,7 @@ body {
 
 @font-face {
   font-family: "us3117";
-  src: url("../woff2/1900_1.woff2") format("woff2");
+  src: url("../fonts/1900_1.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;
@@ -212,7 +212,7 @@ body {
 
 @font-face {
   font-family: "us3117";
-  src: url("../woff2/1600_2.woff2") format("woff2");
+  src: url("../fonts/1600_2.woff2") format("woff2");
   font-weight: 400;
   font-style: normal;
   font-display: swap;

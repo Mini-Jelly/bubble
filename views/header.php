@@ -135,7 +135,7 @@ $this->header('description=&keywords=');
 ?>
 <?php
 // 加载所需css和js文件
-$this->need('./public/include.php');
+$this->need('./views/include.php');
 // 加载自定义头部代码
 $this->options->customHeader();
 // 主题设置：站外链接新窗口打开。
@@ -146,7 +146,7 @@ $openInNewWindow = ($this->options->openInNewWindow ?? 'off') === 'on' ? 'on' : 
 
 // 访客级设置的「后台默认值」：访客在本机改过就由 localStorage 覆盖，没改过走这里。
 // 两个来源的优先级在下面那段内联脚本里实现（见 settings.js 的分层说明）。
-// 默认值统一由 bubbleVisitorDefaults() 计算，设置面板（public/fab.php）也用同一份，
+// 默认值统一由 bubbleVisitorDefaults() 计算，设置面板（views/fab.php）也用同一份，
 // 避免「面板显示的当前值」与「实际生效的值」对不上。
 $visitorDefaults = bubbleVisitorDefaults();
 ?>

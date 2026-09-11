@@ -14,7 +14,7 @@
 if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 // 引入公共头部
-$this->need('./public/header.php');
+$this->need('./views/header.php');
 
 // 本页真实地址：从独立页面列表里反查 permalink。
 // 原先写死 index.php/recent-modified.html，站点开启伪静态后分页链接会直接 404。
@@ -34,7 +34,7 @@ if ($pageUrl === '') {
 ?>
 
 <body>
-    <?php $this->need('./public/nav.php'); ?>
+    <?php $this->need('./views/nav.php'); ?>
     <div class="container">
         <div class="row">
             <main class="col-12 col-lg-10 offset-lg-1" id="main">
@@ -147,4 +147,4 @@ if ($pageUrl === '') {
             </main>
         </div>
     </div>
-<?php $this->need('./public/footer.php'); ?>
+<?php $this->need('./views/footer.php'); ?>

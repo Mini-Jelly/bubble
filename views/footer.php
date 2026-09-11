@@ -35,8 +35,8 @@
   </div>
 </footer>
 <?php
-// 右下角悬浮按钮组：个性化设置 + 回到顶部（见 public/fab.php）
-$this->need('./public/fab.php');
+// 右下角悬浮按钮组：个性化设置 + 回到顶部（见 views/fab.php）
+$this->need('./views/fab.php');
 ?>
 <?php $this->options->customFooter(); ?>
 <?php $this->footer(); ?>

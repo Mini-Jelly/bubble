@@ -4,7 +4,7 @@
 /**
  * 主题色选项表：value => 中文名
  *
- * 后台设置页（core/config.php）与前台「个性化设置」面板（public/fab.php）
+ * 后台设置页（core/config.php）与前台「个性化设置」面板（views/fab.php）
  * 必须使用同一份名单：面板会把每个 value 输出成色块，漏一个访客就少一个可选色，
  * 多一个则是后台选不出来的「幽灵项」。因此抽到这里做唯一真源。
  *
@@ -50,7 +50,7 @@ function bubbleFontSizes(): array
  * 访客级设置的「后台默认值」
  *
  * 优先级模型固定为：访客在本机做出的选择（localStorage）> 这里返回的后台默认值。
- * header.php 的首屏内联脚本与 public/fab.php 的设置面板都要用，
+ * header.php 的首屏内联脚本与 views/fab.php 的设置面板都要用，
  * 集中在这里才不会出现「面板显示的当前值」与「实际生效的值」对不上。
  *
  * 明暗与字号没有对应的后台配置项，默认值写死在调用方（auto / m）。
@@ -367,12 +367,12 @@ function renderArticleCard(array $data): string
   ['imgUrl' => $imgUrl, 'title' => $title, 'excerpt' => $excerpt,
     'category' => $category, 'time' => $time, 'permalink' => $permalink] = $data;
 
-  $templatePath = dirname(__DIR__) . '/template/article_card.php';
+  $templatePath = dirname(__DIR__) . '/views/article_card.php';
 
   // 模板缺失属于部署错误：写日志即可，不要把服务器绝对路径回显到页面上
   if (!is_file($templatePath)) {
     error_log('[bubble] 文章卡片模板缺失: ' . $templatePath);
-    return '<!-- bubble: template/article_card.php 不存在 -->';
+    return '<!-- bubble: views/article_card.php 不存在 -->';
   }
 
   $initialLevel = ob_get_level();
