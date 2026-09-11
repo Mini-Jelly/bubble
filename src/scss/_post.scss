@@ -7,12 +7,6 @@
   word-wrap: break-word;
   position: relative;
 
-  // 只作用于正文内的链接。原先写的是 .post a，会连目录、标签这些结构元素一起命中，
-  // 最后不得不用一串 !important 去反制
-  &-content a {
-    color: var(--link);
-  }
-
   ul {
     //恢复默认样式
     list-style: disc;
@@ -57,7 +51,7 @@
     min-height: 100px;
     max-width: 500px;
     max-height: 90vh;
-    
+
     &-header {
       cursor: move; // 可拖拽提示
       display: flex;
@@ -165,6 +159,13 @@
 
   //文章内容
   &-content {
+
+    // 只作用于正文内的链接。原先写的是 .post a，会连目录、标签这些结构元素一起命中，
+    // 最后不得不用一串 !important 去反制
+    a {
+      color: var(--link);
+    }
+
     img {
       max-width: 100%;
     }
