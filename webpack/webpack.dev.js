@@ -22,10 +22,13 @@ module.exports = {
       },
       {
         test: /\.css$/,
+        // 见 webpack.prod.js 同处注释：CSS 导入是副作用导入，不能被摇树
+        sideEffects: true,
         use: [MiniCssExtractPlugin.loader, "css-loader"],
       },
       {
         test: /\.s[ac]ss$/,
+        sideEffects: true,
         use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
       },
       //处理其他资源

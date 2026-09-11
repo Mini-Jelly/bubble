@@ -43,10 +43,16 @@ module.exports = {
       },
       {
         test: /\.css$/,
+        // CSS 是纯副作用导入：引进来就生效，不存在「导入但未使用」的说法。
+        // 必须显式声明有副作用 —— 否则像 lenis 那样在自己 package.json 里写了
+        // `sideEffects: false` 的库，样式会在 production 构建中被 webpack
+        // 当作死代码静默摇掉：不报错、不警告，样式凭空消失。
+        sideEffects: true,
         use: getStyleLoaders(),
       },
       {
         test: /\.s[ac]ss$/,
+        sideEffects: true,
         use: getStyleLoaders("sass-loader"),
       },
       //处理其他资源
