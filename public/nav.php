@@ -140,8 +140,9 @@
     </ul>
   </div>
 </nav>
-<!-- 手机端侧边栏 -->
-<div id="sidebar" class="sidebar">
+<!-- 手机端侧边栏。自身是滚动容器，标记 data-lenis-prevent 后
+     平滑滚动不会接管它内部的滚轮，滚到底也不会穿透到正文 -->
+<div id="sidebar" class="sidebar" data-lenis-prevent>
   <div class="sidebar-header">
     <form id="search" method="post" action="<?= $this->options->siteUrl(); ?>" role="search">
       <input type="text" id="s" name="s" class="text" placeholder="输入关键字搜索" />

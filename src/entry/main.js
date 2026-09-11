@@ -7,6 +7,7 @@ import "normalize.css";
 //引入scss
 import "../scss/main.scss";
 //引入js
+import "../js/main/smooth_scroll.js";
 import "../js/main/nav.js";
 import "../js/main/nav_sidebar.js";
 import "../js/main/post_toc.js";

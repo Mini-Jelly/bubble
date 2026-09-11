@@ -28,6 +28,9 @@ document.addEventListener('DOMContentLoaded', function () {
   // 6. 为容器设置id并插入html
   tocContainer.id = 'post-toc';
   tocContainer.className = 'post-toc d-none'; // 目录默认隐藏
+  // 目录面板自身是滚动容器（overflow: auto），长目录会在内部滚动。
+  // 不标记的话，Lenis 会把面板内的滚轮也接管掉，变成滚动正文（滚动穿透）。
+  tocContainer.setAttribute('data-lenis-prevent', '');
   tocContainer.innerHTML = `<div id="post-toc-header" class="post-toc-header">
     <h2>文章目录</h2>
     <button id="tocCloseBtn" class="post-toc-close-btn">❌</button>
@@ -166,24 +169,9 @@ document.addEventListener('DOMContentLoaded', function () {
     observer.observe(header);
   });
 
-  // 15. 监听目录点击事件，实现平滑滚动
-  tocList.addEventListener('click', (e) => {
-    if (e.target.tagName === 'A') {
-      e.preventDefault();
-      const targetId = e.target.getAttribute('href');
-      const targetElement = document.querySelector(targetId);
-      if (!targetElement) return;
-
-      // 使用 getBoundingClientRect 计算精确位置，兼容 fixed 定位容器
-      const elementTop =
-        targetElement.getBoundingClientRect().top + window.scrollY;
-
-      window.scrollTo({
-        top: elementTop - 20,
-        behavior: 'smooth',
-      });
-    }
-  });
+  // 15. 目录项的点击滚动不再在这里处理。
+  // 站内锚点（含目录、评论锚点）已由 smooth_scroll.js 统一接管，
+  // 两边各自绑定会导致同一次点击触发两次滚动。
 
   // 16. 监听按钮点击事件，实现目录关闭
   getById('tocCloseBtn').addEventListener('click', function () {
