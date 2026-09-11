@@ -62,16 +62,20 @@ function themeConfig($form)
   $form->addInput($openInNewWindow);
 
   /* 轮播图 */
-  // 默认值必须是完整 URL。原先写的是 usr/themes/bubble/... 这种相对路径，
-  // 在文章页、非根目录安装等场景下会解析到错误的地址（图片直接 404）。
-  $swiperDefaultImage1 = Helper::options()->themeUrl('assets/img/swiper/s1.png');
-  $swiperDefaultImage2 = Helper::options()->themeUrl('assets/img/swiper/s2.png');
-  $swiperDefaultSiteUrl = Helper::options()->siteUrl();
+  // ⚠️ Widget\Options::themeUrl() 与 siteUrl() 是「输出」方法，内部是 echo 而不是 return。
+  //    在赋值上下文里调用它们，会把 URL 直接打印到设置页面（表现为设置页面上多出一串
+  //    拼在一起的网址），同时变量拿到 null。取值必须用「魔术属性」形式 ——
+  //    属性访问会走到 ___themeUrl() 的 return 分支，才是真正的取值方式。
+  //    完整 URL 是必要的：相对路径留到模板里按站点根补全，避免安装目录/伪静态差异导致的 404。
+  $swiperThemeUrl = Helper::options()->themeUrl;
+  $swiperSiteUrl  = Helper::options()->siteUrl;
+  $swiperDefaultImage1 = Typecho_Common::url('assets/img/swiper/s1.png', $swiperThemeUrl);
+  $swiperDefaultImage2 = Typecho_Common::url('assets/img/swiper/s2.png', $swiperThemeUrl);
   $swiper = new Typecho_Widget_Helper_Form_Element_Textarea(
     'swiper',
     NULL,
-    $swiperDefaultImage1 . '||' . $swiperDefaultSiteUrl . '||广告招租位' . "\r\n"
-      . $swiperDefaultImage2 . '||' . $swiperDefaultSiteUrl . '||广告招租位',
+    $swiperDefaultImage1 . '||' . $swiperSiteUrl . '||广告招租位' . "\r\n"
+      . $swiperDefaultImage2 . '||' . $swiperSiteUrl . '||广告招租位',
     '轮播图',
     '介绍：用于在首页展示轮播图 <br />
         格式：图片链接 || 跳转链接 || 跳转文字 <br />
