@@ -1,6 +1,9 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
 <?php
 $swiper = [];
+// 站内相对地址的补全基准。配置里允许写相对路径，不补全的话在分页、文章页这类
+// 多级路径下会被浏览器按「当前目录」解析，图片必 404（详见 resolveResourceUrl）。
+$swiperBase = (string) $this->options->siteUrl;
 // 兼容 CRLF / LF / CR 三种换行，原先只按 \r\n 切会导致 LF 配置整段粘成一行
 $lines = preg_split('/\r\n|\r|\n/', (string) $this->options->swiper, -1, PREG_SPLIT_NO_EMPTY);
 foreach ($lines as $line) {
@@ -12,8 +15,8 @@ foreach ($lines as $line) {
     continue; // 丢弃没有图片的配置行
   }
   $swiper[] = [
-    'img'   => $img,
-    'url'   => $parts[1] ?? '',
+    'img'   => resolveResourceUrl($img, $swiperBase),
+    'url'   => resolveResourceUrl($parts[1] ?? '', $swiperBase),
     'title' => $parts[2] ?? '',
   ];
 }

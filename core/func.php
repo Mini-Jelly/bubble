@@ -174,6 +174,43 @@ function getTransparent1x1GIF(): string
 }
 
 /**
+ * 把配置里填写的资源地址补全成可直接使用的绝对地址
+ *
+ * 背景：轮播图这类配置项允许写相对路径。而相对路径的解析基准是「当前页面的
+ * 地址」，于是同一张图会出现「首页正常、分页和文章页 404」的怪象：
+ *   首页  http://localhost/                     → http://localhost/usr/...            ✅
+ *   分页  http://localhost/index.php/page/2/    → http://localhost/index.php/page/2/usr/...  ❌
+ * 实测分页下图片请求会落到 Typecho 的 404 页（响应体标题就是「页面没找到」），
+ * 而首页之所以看着正常，纯粹因为 URL 恰好与站点根重合。
+ *
+ * 这里统一按站点根补全，对数据库里的存量配置同样生效，无需用户重新保存设置。
+ *
+ * @param string $url  配置中原样填写的地址
+ * @param string $base 补全基准，通常传站点根地址
+ * @return string 空串与已是绝对形式的地址都原样返回
+ */
+function resolveResourceUrl(string $url, string $base): string
+{
+  $url = trim($url);
+
+  if ('' === $url) {
+    return '';
+  }
+
+  // 已绝对（http://、https://）、协议相对（//cdn.example.com）、
+  // 特殊协议（data:、mailto:、tel:）以及页内锚点，一律原样返回
+  if (
+    preg_match('#^(?:[a-z][a-z0-9+.\-]*:)?//#i', $url)
+    || preg_match('#^(?:data|mailto|tel):#i', $url)
+    || '#' === $url[0]
+  ) {
+    return $url;
+  }
+
+  return (string) Typecho_Common::url($url, $base);
+}
+
+/**
  * 返回页面生成时间和页面消耗的内存
  * 
  * @return array 包含页面生成时间和页面消耗的内存的关联数组
