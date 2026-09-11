@@ -22,6 +22,10 @@ import "lenis/dist/lenis.css";
 const lenis = new Lenis({
   // 由 Lenis 自持 rAF 循环，省掉手写 requestAnimationFrame 样板
   autoRaf: true,
+  // 阻尼系数：每帧向目标位置靠拢的比例。Lenis 默认 0.1，在 Windows 鼠标滚轮上
+  // （一格固定 100px、不像触控板有连续增量）偏肉；0.22 是「看得出缓动、松手立刻
+  // 停住」的折中值。这个数直接决定手感：调大更跟手，调小更飘。
+  lerp: 0.22,
   // 其余保持默认值，逐条说明为什么不改：
   //   smoothWheel: true         滚轮平滑（本模块的存在意义）
   //   syncTouch: false          移动端不接管触摸，保留原生惯性 —— 原生的手感最好
