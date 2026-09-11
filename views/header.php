@@ -9,14 +9,20 @@ $isSingle = $this->is('post') || $this->is('page');
 $isIndex = $this->is('index');
 
 // 完整标题（如「分类 xxx 下的文章 - 站点名」），<title> 与 og:title 共用一份
-// 用输出缓冲复用 archiveTitle() 的既有格式，保证标题格式不发生任何变化
+// 用输出缓冲复用 archiveTitle() 的既有格式，保证标题格式不发生任何变化。
+//
+// ⚠️ 第三个参数 $end 必须传空串。archiveTitle() 的 $before / $end 是给
+//    「内联 echo」写法准备的拼接符（`archiveTitle(..., '', ' - '); options->title();`），
+//    这里既然把结果缓冲下来自己拼，分隔符就只能出现一次 —— 交给下面的 $fullTitle。
+//    此前传了 ' - '，而末尾的 trim() 只去空白不去连字符，于是每个非首页标题都变成
+//    「文章标题 - - 站点名」（实测文章页 / 归档页 / 404 页全部中招，SEO 缺陷）。
 ob_start();
 $this->archiveTitle([
   'category' => ('分类 %s 下的文章'),
   'search' => ('包含关键字 %s 的文章'),
   'tag' => ('标签 %s 下的文章'),
   'author' => ('%s 发布的文章')
-], '', ' - ');
+], '', '');
 $archiveTitle = trim((string) ob_get_clean());
 $fullTitle = ($archiveTitle !== '' ? $archiveTitle . ' - ' : '') . $siteTitle;
 
