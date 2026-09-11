@@ -1,0 +1,402 @@
+// 右下角悬浮按钮组（个性化设置 + 回到顶部）
+//
+// 合成一组的两个理由：
+//   1. 两者都固定在右下角，分开定位迟早互相压盖，层级也各写各的；
+//   2. 回到顶部收起时只做 visibility 隐藏、仍然占位，设置按钮的位置因此恒定，
+//      不会随着滚动出现/消失而上下跳动。
+//
+// 层级统一走 :root 的 --z-fab（见 _color.scss），刻意压在侧边栏蒙版之下 ——
+// 手机端抽屉或设置面板打开时会被蒙版一起盖住。
+.fab-group {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: var(--z-fab);
+
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+
+  // 这个容器只负责定位，绝不能出现 transform / filter / perspective，
+  // 否则会成为内部 position: fixed 元素的包含块，把固定定位整体带坏
+}
+
+// 悬浮按钮的公共外观
+.fab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+
+  color: var(--text1);
+  background-color: var(--card1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--box-shadow);
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+
+  &:hover {
+    color: var(--theme-7);
+    background-color: var(--bg-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--link);
+    outline-offset: 2px;
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+  }
+
+  // 面板展开时保持高亮，明确「这个面板属于这个按钮」
+  &[aria-expanded="true"] {
+    color: #fff;
+    background-color: var(--theme-8);
+    border-color: transparent;
+  }
+}
+
+// 回到顶部
+//
+// 默认隐藏。用 visibility 而不是 display：过渡才有中间态可插值，而且
+// visibility: hidden 的元素不可聚焦，键盘 Tab 不会停在隐藏按钮上。
+.back-to-top {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease,
+    background-color 0.2s ease, color 0.2s ease;
+
+  &.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+}
+
+// 设置面板的定位基准。
+// 用 relative 而非 absolute：它仍然是 .fab-group 的 flex 子项，
+// 参与纵向排布（absolute 会让它脱离流，两个按钮就会重叠）。
+.fab-settings {
+  position: relative;
+}
+
+.settings-panel {
+  position: absolute;
+  right: 0;
+  // 翻到按钮上方。8px 与组内 gap 一致，视觉上与按钮同属一组
+  bottom: calc(100% + 8px);
+  // 窄屏时不能顶到左边去
+  width: min(280px, calc(100vw - 40px));
+  // 视口很矮时面板自己滚动；已在 fab.php 标记 data-lenis-prevent，
+  // 面板内的滚轮不会被平滑滚动接管成「滚动正文」
+  max-height: min(70vh, 480px);
+  overflow: auto;
+  padding: 12px;
+  padding-right: 14px;
+
+  color: var(--text1);
+  background-color: var(--card1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--box-shadow);
+
+  // 用 visibility 而不是 hidden 属性：hidden 会直接杀掉过渡，
+  // 而 visibility: hidden 同样能让隐藏态退出 Tab 顺序与无障碍树
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px) scale(0.98);
+  transform-origin: bottom right;
+  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  &__title {
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  &__reset {
+    padding: 2px 6px;
+    font-family: inherit;
+    font-size: 0.75rem;
+    /* 面板底色是 --card1：暗色下 --text3(gray-7) 与它只有约 1.4:1，
+       连 --text2(gray-6) 也才 3.5:1 —— 都撑不起一个「可点的按钮」，
+       所以这里直接用最亮的一档 */
+    color: var(--text1);
+    background: none;
+    border: 0;
+    border-radius: var(--radius);
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--link);
+      background-color: var(--bg-hover);
+    }
+
+    // 没有任何本机覆盖时点了也没意义，直接置灰。
+    // 不用 --disabled-text：它在暗色下等于 card1，会变成完全看不见的文字
+    &:disabled {
+      opacity: 0.45;
+      cursor: default;
+    }
+  }
+
+  &__note {
+    margin: 12px 0 0;
+    font-size: 0.75rem;
+    line-height: 1.15rem;
+    // 同上：--text3 在暗色面板上等于隐形
+    color: var(--text2);
+  }
+}
+
+// ---------- 单个设置项 ----------
+.field + .field {
+  margin-top: 12px;
+}
+
+.field__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.field__label {
+  font-size: 0.8125rem;
+  // 标签是这一屏里最该先被读到的文字，用最亮的一档
+  color: var(--text1);
+}
+
+// 当前值。用 --link 而不是某个固定的 --theme-n：
+// 它已经按明暗模式分别取了 theme-9 / theme-5，两套底色下都保证可读
+.field__value {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--link);
+}
+
+// ---------- 分段控件（外观 / 字体来源） ----------
+.segmented {
+  position: relative;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  padding: 2px;
+  background-color: var(--card2);
+  border-radius: var(--radius);
+
+  // 滑块的位置完全由 JS 写进来的 --seg-index 决定，
+  // 不需要为「选中第 n 项」各写一份样式，增删选项也不用改 CSS。
+  // translateX 的百分比基准是元素自身宽度，而滑块宽度正好是一格，故直接乘 index。
+  &__thumb {
+    position: absolute;
+    top: 2px;
+    bottom: 2px;
+    left: 2px;
+    width: calc((100% - 4px) / var(--seg-count, 1));
+    background-color: var(--theme-8);
+    border-radius: calc(var(--radius) - 2px);
+    box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+    transform: translateX(calc(var(--seg-index, 0) * 100%));
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  button {
+    position: relative; // 压在滑块之上，否则滑块会盖住文字
+    z-index: 1;
+    padding: 5px 4px;
+    font-family: inherit;
+    font-size: 0.8125rem;
+    // 未选中项的背景是 --card2，比 --card1 更亮，
+    // 用 --text2 时暗色下只有约 2.5:1，基本读不出来
+    color: var(--text1);
+    background: none;
+    border: 0;
+    border-radius: calc(var(--radius) - 2px);
+    cursor: pointer;
+    transition: color 0.2s ease;
+
+    &:focus-visible {
+      outline: 2px solid var(--link);
+      outline-offset: -2px;
+    }
+
+    &[aria-checked="true"] {
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+}
+
+// ---------- 滑条（正文字号） ----------
+.slider {
+  position: relative;
+  // 上方留给轨道与滑块，下方留给刻度文字
+  height: 36px;
+  cursor: pointer;
+  // 触屏上拖动滑条不应该顺带把页面滚走
+  touch-action: none;
+  user-select: none;
+
+  // 进度由 JS 写入（0 ~ 1）
+  --slider-progress: 0;
+
+  // 轨道左右各让出 14px：首尾刻度（「小」「特大」）比滑块宽，
+  // 不留这段空间会让刻度贴到面板边缘，看起来像没对齐
+  &__rail,
+  &__track,
+  &__handle {
+    position: absolute;
+    top: 10px;
+    height: 4px;
+    transform: translateY(-50%);
+    border-radius: 2px;
+  }
+
+  &__rail {
+    left: 14px;
+    right: 14px;
+    background-color: var(--card2);
+  }
+
+  &__track {
+    left: 14px;
+    width: calc((100% - 28px) * var(--slider-progress));
+    background-color: var(--theme-6);
+  }
+
+  &__handle {
+    left: calc(14px + (100% - 28px) * var(--slider-progress));
+    width: 14px;
+    height: 14px;
+    background-color: var(--card1);
+    border: 2px solid var(--theme-6);
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
+    transition: transform 0.15s ease;
+  }
+
+  // 键盘聚焦的提示做在滑块上，而不是整个 36px 高的容器上
+  &:focus-visible {
+    outline: none;
+
+    .slider__handle {
+      outline: 2px solid var(--link);
+      outline-offset: 2px;
+    }
+  }
+
+  &.is-dragging .slider__handle {
+    transform: translate(-50%, -50%) scale(1.15);
+  }
+
+  &__marks {
+    position: absolute;
+    top: 20px;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.6875rem;
+    line-height: 1rem;
+    // 刻度是四档字号唯一的文字标识，同样是暗色面板上的小字，
+    // 用最亮的一档才看得清
+    color: var(--text1);
+
+    // 0 宽 + 文字居中溢出：让每个刻度以「档位坐标」为中心对齐滑块，
+    // 而不是以自身左边缘对齐 —— 「特大」比「小」宽，否则会整体偏掉
+    span {
+      width: 0;
+      overflow: visible;
+      white-space: nowrap;
+      text-align: center;
+    }
+  }
+}
+
+// ---------- 色块（主题色） ----------
+.swatches {
+  display: grid;
+  // 12 个色块固定铺 6 列。写成 auto-fit 会在窄面板里跳成 5 列 / 4 列，反而更乱
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  justify-items: center;
+
+  .swatch {
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    // 色块自己带 theme="x"（见 public/fab.php），而调色板选择器已从
+    // :root[theme=x] 解绑为 [theme=x]，所以这里取到的就是该颜色的真实主色，
+    // 不需要在别处再抄一遍 12 组色值
+    background-color: var(--theme-6);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover {
+      transform: scale(1.12);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--link);
+      outline-offset: 2px;
+    }
+
+    // 选中态用外圈：色块本身就要展示颜色，不能再被别的样式覆盖掉
+    &[aria-checked="true"] {
+      box-shadow: 0 0 0 2px var(--card1), 0 0 0 4px var(--theme-8);
+      transform: scale(1.08);
+    }
+  }
+}
+
+@media only screen and (max-width: 833px) {
+  .fab-group {
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+// 系统要求「减少动态效果」时，只保留必要的显隐，去掉所有位移与缓动
+@media (prefers-reduced-motion: reduce) {
+
+  .back-to-top,
+  .settings-panel,
+  .segmented__thumb,
+  .slider__handle,
+  .swatches .swatch {
+    transition: none;
+  }
+
+  .back-to-top,
+  .settings-panel {
+    transform: none;
+  }
+
+  .segmented__thumb {
+    // 位移承载了「选中哪一项」这个信息，不能去掉，只去掉缓动
+    transform: translateX(calc(var(--seg-index, 0) * 100%));
+  }
+}

@@ -24,28 +24,33 @@ function themeConfig($form)
     </div>
   <?php
   /* 主题颜色 */
+  // 选项表来自 bubbleThemeColors()：前台「个性化设置」面板会按同一份名单渲染色块，
+  // 两处各写一遍迟早会漂移（新增一个颜色时漏改其中一处）。
   $themeColor = new Typecho_Widget_Helper_Form_Element_Select(
     'themeColor',
-    array(
-      'blue' => '蓝色(默认)',
-      'red' => '红色',
-      'pink' => '粉红色',
-      'grape' => '葡萄色',
-      'violet' => '紫罗兰色',
-      'indigo' => '靛蓝色',
-      'cyan' => '蓝绿色',
-      'teal' => '鸭绿色',
-      'green' => '绿色',
-      'lime' => '酸橙绿色',
-      'yellow' => '黄色',
-      'orange' => '橘色',
-    ),
+    bubbleThemeColors(),
     'blue',
     '主题颜色',
-    '介绍：用于修改主题颜色'
+    '介绍：主题的默认颜色。访客可在右下角「个性化设置」里自行更换，访客的选择优先级更高。'
   );
   $themeColor->setAttribute('class', 'bubble-option Global');
   $form->addInput($themeColor);
+
+  /* 字体来源 */
+  $fontFamily = new Typecho_Widget_Helper_Form_Element_Select(
+    'fontFamily',
+    array(
+      'system' => '系统字体',
+      'site' => '站点字体',
+    ),
+    'system',
+    '字体来源',
+    '介绍：默认使用访客设备自带的系统字体，不下载任何字体文件。<br />
+    选择「站点字体」则使用主题内置的 HarmonyOS Sans SC 子集，中文页面需额外下载约 460KB。<br />
+    访客可在右下角「个性化设置」里自行更换，访客的选择优先级更高。'
+  );
+  $fontFamily->setAttribute('class', 'bubble-option Global');
+  $form->addInput($fontFamily);
 
   /* 在新窗口打开 */
   $openInNewWindow = new Typecho_Widget_Helper_Form_Element_Select(

@@ -51,7 +51,8 @@
     border-radius: var(--radius);
     padding: 0.75rem;
     box-shadow: var(--box-shadow);
-    z-index: 1000;
+    // 目录是浮在正文之上的独立面板；层级统一走 :root 的 --z-* 令牌
+    z-index: var(--z-toc);
 
     /* 四向缩放。resize 生效的前提是 overflow 不为 visible；滚动已经交给下面的
        ul，外壳用 hidden 即可。可拖范围由 min-/max- 交给浏览器钳制，拖到边界自动停住。 */

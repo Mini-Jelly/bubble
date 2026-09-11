@@ -143,29 +143,61 @@ $this->options->customHeader();
 // <a href="#"> 这类占位链接也一并变成新标签页，站内跳转体验彻底被破坏。
 // 现在改成在 <html> 上打标记，由 main.js 只对站外链接补 target="_blank"。
 $openInNewWindow = ($this->options->openInNewWindow ?? 'off') === 'on' ? 'on' : 'off';
+
+// 访客级设置的「后台默认值」：访客在本机改过就由 localStorage 覆盖，没改过走这里。
+// 两个来源的优先级在下面那段内联脚本里实现（见 settings.js 的分层说明）。
+// 默认值统一由 bubbleVisitorDefaults() 计算，设置面板（public/fab.php）也用同一份，
+// 避免「面板显示的当前值」与「实际生效的值」对不上。
+$visitorDefaults = bubbleVisitorDefaults();
 ?>
 <script>
-  /* 必须在首屏绘制前把三个属性写全，否则 CSS 变量取不到值会闪白：
-     theme           主题色    —— 服务端输出
-     color-scheme    明暗模式  —— 跟随本地存储，缺省随系统
-     font-size-mode  字号      —— 跟随本地存储
-     这三个变量的默认值需与 src/js/main/settings.js 中的 SETTINGS 保持一致 */
+  /* 必须在首屏绘制前把四个属性写全，否则 CSS 变量取不到值会闪白：
+     theme              主题色     —— 访客选择优先，否则后台默认色
+     color-scheme       明暗模式   —— 访客选择优先，否则跟随系统
+     font-size-mode     字号       —— 访客选择优先，否则中号
+     font-family-mode   字体来源   —— 访客选择优先，否则后台设置（默认系统字体）
+
+     这四个键必须与 src/js/main/settings.js 的 SETTINGS 一一对应，改一处必须改两处。 */
   (function () {
     var html = document.documentElement;
-    html.setAttribute('theme', '<?= htmlspecialchars((string) $this->options->themeColor ?: 'blue', ENT_QUOTES, 'UTF-8') ?>');
-    html.setAttribute('open-new-window', '<?= $openInNewWindow ?>');
 
-    var mode = localStorage.getItem('theme');
-    if (mode !== 'light' && mode !== 'dark') {
+    var DEFAULTS = {
+      'theme-color': <?= json_encode($visitorDefaults['themeColor']) ?>,
+      'theme': 'auto',
+      'font-size': 'm',
+      'font-family': <?= json_encode($visitorDefaults['fontFamily']) ?>
+    };
+
+    /* 白名单。属性值一旦取不到对应 CSS 变量，依赖它的整条声明会静默失效
+       （主题此前就因漏定义 --link 出现过链接退化成继承色），所以宁可退回默认值。 */
+    var ALLOWED = {
+      'theme-color': <?= json_encode(array_keys(bubbleThemeColors())) ?>,
+      'theme': ['auto', 'light', 'dark'],
+      'font-size': <?= json_encode(array_keys(bubbleFontSizes())) ?>,
+      'font-family': ['system', 'site']
+    };
+
+    function read(key) {
+      var stored = null;
+      try {
+        stored = localStorage.getItem(key);
+      } catch (e) {
+        /* Safari 无痕模式下 localStorage 读写可能直接抛错，不能让它中断整段初始化 */
+      }
+      return ALLOWED[key].indexOf(stored) !== -1 ? stored : DEFAULTS[key];
+    }
+
+    /* 明暗：auto 只是访客的「意愿」，属性上只接受解析后的终值 */
+    var mode = read('theme');
+    if (mode === 'auto') {
       mode = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
-    html.setAttribute('color-scheme', mode);
 
-    var fontSize = localStorage.getItem('font-size');
-    html.setAttribute(
-      'font-size-mode',
-      fontSize === 's' || fontSize === 'm' || fontSize === 'l' || fontSize === 'xl' ? fontSize : 'm'
-    );
+    html.setAttribute('theme', read('theme-color'));
+    html.setAttribute('color-scheme', mode);
+    html.setAttribute('font-size-mode', read('font-size'));
+    html.setAttribute('font-family-mode', read('font-family'));
+    html.setAttribute('open-new-window', '<?= $openInNewWindow ?>');
   })();
 </script>
 </head>

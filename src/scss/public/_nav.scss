@@ -36,7 +36,8 @@ $nav-height: 48px;
 }
 
 .nav {
-  z-index: 10;
+  // 层级统一走 :root 的 --z-* 令牌（见 _color.scss），不再各处硬编码数字
+  z-index: var(--z-nav);
   width: 100%;
   height: #{$nav-height};
   position: relative;
@@ -196,124 +197,11 @@ $nav-height: 48px;
       width: 100%;
     }
   }
-
-  // 全局设置
-  .settings {
-    position: relative;
-    display: inline-block;
-    width: #{$nav-height};
-    height: #{$nav-height};
-
-    // 设置按钮
-    &-btn {
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
-      background-color: transparent;
-      border: none;
-      outline: none;
-      line-height: 0; // 使得按钮上下居中，而不是像文字一样会偏高
-
-      svg {
-        width: #{calc($nav-height / 2)};
-        height: #{calc($nav-height / 2)};
-        fill: #fff;
-      }
-    }
-
-    &-menu {
-      width: max-content;
-      display: none;
-      background-color: var(--card2);
-      box-shadow: var(--box-shadow);
-      flex-direction: column;
-      border-radius: var(--radius);
-      padding: 5px;
-      position: absolute;
-      margin-top: 5px;
-      right: 15px;
-      border: 1px solid var(--border);
-
-      &.show {
-        display: block;
-      }
-
-      li+li {
-        margin-top: 2px;
-      }
-
-      li {
-        position: relative;
-        color: var(--text1);
-        display: flex;
-        flex-direction: row;
-        height: 30px;
-        border: 0;
-        padding: 5px;
-        background-color: transparent;
-        border-radius: var(--radius);
-
-        &.active {
-          background-color: var(--theme-8);
-          color: #fff;
-
-          &::after {
-            content: " ";
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 14px;
-            height: 6px;
-            border: #fff solid;
-            border-width: 3px 3px 0px 0px;
-            transform: rotate(135deg);
-          }
-        }
-
-        // 菜单分割线
-        &.divider {
-          height: 1px;
-          overflow: hidden;
-          line-height: 0;
-          margin: 4px 2px;
-          padding: 0;
-          background-color: var(--border);
-          border-radius: var(--radius);
-
-          &:hover {
-            cursor: default;
-            background-color: var(--border);
-          }
-        }
-
-        svg {
-          width: 25px;
-          height: 100%;
-          fill: currentColor;
-          margin-right: 5px;
-        }
-
-        span {
-          width: 100%;
-          text-align: left;
-          //保持上下居中
-          line-height: 1rem;
-          align-content: center;
-        }
-
-        &:hover {
-          color: #fff;
-          cursor: pointer;
-          background-color: var(--theme-5);
-        }
-      }
-    }
-  }
 }
 
 // 侧边栏，手机端专用
 .sidebar {
-  z-index: 20;
+  z-index: var(--z-sidebar);
   top: 0;
   left: 0;
   bottom: 0;
@@ -448,7 +336,7 @@ $nav-height: 48px;
 #sidebar-backdrop {
   // 不用display:none，因为它可能会造成transition无法生效的问题
   visibility: hidden;
-  z-index: 10;
+  z-index: var(--z-backdrop);
   top: 0;
   left: 0;
   opacity: 0;

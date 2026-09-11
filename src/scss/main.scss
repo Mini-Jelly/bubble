@@ -7,19 +7,33 @@
 @use "public/article_card.scss"; // 文章卡片
 @use "public/comment.scss"; // 评论区
 @use "public/footer.scss"; // 页脚
-@use "public/back_to_top.scss"; // 回到顶部按钮
+@use "public/fab.scss"; // 右下角悬浮按钮组（个性化设置面板 + 回到顶部）
 @use "lib/prism.scss"; // 文章代码美化样式
 
 * {
   box-sizing: border-box;
 }
 
+/* 系统字体集。
+   与原先 "us3117" 之后的回退链完全一致 —— 也就是「站点字体没加载出来时的表现」，
+   因此切换到系统字体不会改变中英文的渲染结果，只是不再下载任何字体文件。
+   Windows 会落到微软雅黑、macOS 落到苹方，观感不同但都不需要网络。 */
+$system-font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+  "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji",
+  "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
 html {
   font-size: 16px;
   overflow-y: scroll;
   line-height: 1.5rem;
-  font-family: "us3117", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
-    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  /* 默认系统字体：@font-face 只在字体栈真正引用到该 family 时才会下载，
+     所以默认状态下 us3117 那三片字体（中文页面约 460KB）一个字节都不会请求。
+     访客在右下角设置里选「站点字体」时才切换 —— 见下面的 [font-family-mode="site"] */
+  font-family: $system-font-stack;
+}
+
+html[font-family-mode="site"] {
+  font-family: "us3117", $system-font-stack;
 }
 
 /* 根据 html 元素上的 font-size-mode 属性设置根字体大小，font-size-mode由js控制 */

@@ -1,18 +1,5 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit; ?>
 <svg xmlns="http://www.w3.org/2000/svg" class="d-none" aria-hidden="true">
-  <symbol id="icon-auto" viewBox="0 0 16 16">
-    <path d="M8 15A7 7 0 1 0 8 1zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16"></path>
-  </symbol>
-  <symbol id="icon-light" viewBox="0 0 16 16">
-    <path
-      d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6m0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8M8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0m0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13m8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5M3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8m10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0m-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0m9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707M4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708">
-    </path>
-  </symbol>
-  <symbol id="icon-dark" viewBox="0 0 16 16">
-    <path
-      d="M6 .278a.77.77 0 0 1 .08.858 7.2 7.2 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277q.792-.001 1.533-.16a.79.79 0 0 1 .81.316.73.73 0 0 1-.031.893A8.35 8.35 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.75.75 0 0 1 6 .278">
-    </path>
-  </symbol>
   <symbol id="icon-clean" viewBox="0 0 16 16">
     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
     <path
@@ -90,55 +77,11 @@
   }
   ?>
   <?php
-  // aria-haspopup: 指示元素是否有弹出式菜单或对话框（true/false）
-  // aria-expanded: 指示可折叠元素的展开状态（true/false）
+  // 全局设置（明暗 / 字号 / 字体 / 主题色）已迁到右下角悬浮按钮组，
+  // 与「回到顶部」合成一组 —— 见 public/fab.php。
+  // 上面的 SVG 图标符号仍留在本文件：nav 在 body 里最先渲染，
+  // 后面的 fab.php 引用 #icon-setting 时才不会踩到「符号尚未定义」。
   ?>
-  <!-- 全局设置功能 -->
-  <div class="settings" aria-haspopup="true" aria-expanded="false">
-    <!-- 下拉菜单开关 -->
-    <button id="settings-btn" class="settings-btn" type="button" aria-controls="settings-menu">
-      <svg>
-        <use href="#icon-setting"></use>
-      </svg>
-      <span class="sr-only">Theme settings</span>
-    </button>
-    <!-- 设置菜单 -->
-    <ul id="settings-menu" class="settings-menu" role="menu" aria-labelledby="settings-btn">
-      <li role="menuitem" data-value="auto" data-setting-key="theme" aria-label="Auto mode">
-        <svg>
-          <use href="#icon-auto"></use>
-        </svg>
-        <span>跟随系统&nbsp;&nbsp;&nbsp;&nbsp;</span>
-      </li>
-      <li role="menuitem" data-value="light" data-setting-key="theme" aria-label="Light mode">
-        <svg>
-          <use href="#icon-light"></use>
-        </svg>
-        <span>浅色</span>
-      </li>
-      <li role="menuitem" data-value="dark" data-setting-key="theme" aria-label="Dark mode">
-        <svg>
-          <use href="#icon-dark"></use>
-        </svg>
-        <span>深色</span>
-      </li>
-      <!-- 分割线 -->
-      <li role="none" class="divider"></li>
-      <!-- 字体大小 -->
-      <li role="menuitem" data-value="s" data-setting-key="fontSize" aria-label="字体：小">
-        <span>字体：小</span>
-      </li>
-      <li role="menuitem" data-value="m" data-setting-key="fontSize" aria-label="字体：中">
-        <span>字体：中</span>
-      </li>
-      <li role="menuitem" data-value="l" data-setting-key="fontSize" aria-label="字体：大">
-        <span>字体：大</span>
-      </li>
-      <li role="menuitem" data-value="xl" data-setting-key="fontSize" aria-label="字体：特大">
-        <span>字体：巨大</span>
-      </li>
-    </ul>
-  </div>
 </nav>
 <!-- 手机端侧边栏。自身是滚动容器，标记 data-lenis-prevent 后
      平滑滚动不会接管它内部的滚轮，滚到底也不会穿透到正文 -->

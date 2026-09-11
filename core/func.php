@@ -2,6 +2,80 @@
 /* 主题函数 */
 
 /**
+ * 主题色选项表：value => 中文名
+ *
+ * 后台设置页（core/config.php）与前台「个性化设置」面板（public/fab.php）
+ * 必须使用同一份名单：面板会把每个 value 输出成色块，漏一个访客就少一个可选色，
+ * 多一个则是后台选不出来的「幽灵项」。因此抽到这里做唯一真源。
+ *
+ * @return array<string, string>
+ */
+function bubbleThemeColors(): array
+{
+  return [
+    'blue'   => '蓝色',
+    'red'    => '红色',
+    'pink'   => '粉红色',
+    'grape'  => '葡萄色',
+    'violet' => '紫罗兰色',
+    'indigo' => '靛蓝色',
+    'cyan'   => '蓝绿色',
+    'teal'   => '鸭绿色',
+    'green'  => '绿色',
+    'lime'   => '酸橙绿色',
+    'yellow' => '黄色',
+    'orange' => '橘色',
+  ];
+}
+
+/**
+ * 正文字号档位表：value => 中文名
+ *
+ * 顺序即滑条的档位顺序（由小到大），前台滑条按下标取值，
+ * 因此这里不能随意调序，调整顺序等同于调整 UI 语义。
+ *
+ * @return array<string, string>
+ */
+function bubbleFontSizes(): array
+{
+  return [
+    's'  => '小',
+    'm'  => '中',
+    'l'  => '大',
+    'xl' => '特大',
+  ];
+}
+
+/**
+ * 访客级设置的「后台默认值」
+ *
+ * 优先级模型固定为：访客在本机做出的选择（localStorage）> 这里返回的后台默认值。
+ * header.php 的首屏内联脚本与 public/fab.php 的设置面板都要用，
+ * 集中在这里才不会出现「面板显示的当前值」与「实际生效的值」对不上。
+ *
+ * 明暗与字号没有对应的后台配置项，默认值写死在调用方（auto / m）。
+ *
+ * @return array{themeColor: string, fontFamily: string}
+ */
+function bubbleVisitorDefaults(): array
+{
+  $options = Helper::options();
+
+  $themeColor = (string) ($options->themeColor ?: 'blue');
+  if (!array_key_exists($themeColor, bubbleThemeColors())) {
+    // 数据库里可能残留已废弃的颜色名，兜底成默认色，
+    // 否则会把一个没有 CSS 变量对应的值写进 html[theme]
+    $themeColor = 'blue';
+  }
+
+  return [
+    'themeColor' => $themeColor,
+    // 老用户升级主题后该配置项为 NULL，不能直接和 'site' 严格比较
+    'fontFamily' => ($options->fontFamily ?? 'system') === 'site' ? 'site' : 'system',
+  ];
+}
+
+/**
  * 计算距离上次更新的自然日天数
  *
  * @param int $modified 最后更新时间的时间戳
