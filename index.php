@@ -1,10 +1,10 @@
 <?php
 
 /**
- * bubble 1.0.0
+ * bubble 1.1.0
  * @package Bubble
  * @author Mini-Jelly
- * @version 1.0.0
+ * @version 1.1.0
  * @build 20260911
  * @link https://jjj8.top
  */
