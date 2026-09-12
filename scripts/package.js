@@ -1,24 +1,21 @@
 /**
  * 主题打包脚本
  *
- * 产出一个可以直接丢进 `usr/themes/` 解压的 zip（顶层带 bubble/ 目录）。
+ * 产出可直接解压到 usr/themes/ 的 zip，顶层为 bubble/。
  *
- * 为什么用「白名单」而不是排除法：
- *   排除法必须先穷举 node_modules / src / webpack / scripts / docs / .audit-tmp /
- *   dist.bak / 各种配置文件……漏掉任何一项，源码、审查报告甚至别人的构建缓存就会
- *   跟着发布出去。白名单只需要回答一个问题：「Typecho 运行时到底要哪些文件」，
- *   答案短、稳定、不会随工具链变化。
+ * 文件清单用「白名单」而不是排除法：排除法要求穷举 node_modules / src /
+ * docs / dist.bak 等一切不该发布的路径，漏掉任何一项都会把源码或审查报告
+ * 发出去；白名单只需回答「Typecho 运行时需要什么」，答案短且不随工具链变化。
+ * docs/ 与 scripts/ 因此天然不进包。
  *
- * 为什么要把「文档不进发布包」从 .gitignore 搬到本脚本：
- *   审查报告（docs/AUDIT.md）对维护者有价值、对下载主题的用户没价值。
- *   .gitignore 只能表达「不进仓库」，表达不了「进仓库但不进发布包」——
- *   放错地方的结果是仓库里一份设计文档都不剩。交给打包脚本排除才准确。
+ * 复制到 stage 后会剥离全部注释，发布包与仓库源码的差异仅此一项。
  *
  * 用法：npm run package
  */
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const { zipDirectory } = require('./zip');
 
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, '.package');
@@ -34,7 +31,7 @@ const INCLUDE = [
   'functions.php',        // Typecho 的主题钩子入口
   'core',                 // 配置 / 公共函数 / 自定义表单元素
   'views',                // 视图片段，由 need() 包含
-  'dist',                 // 构建产物：CSS / JS / 字体（必须先 npm run build）
+  'dist',                 // 构建产物，必须先 npm run build
   'assets',               // 不经构建、由 PHP 直接引用的图片
   'screenshot.png',
   'README.md',
@@ -56,6 +53,62 @@ function copy(src, dest) {
   }
 }
 
+function walk(dir, onFile) {
+  for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+    const p = path.join(dir, e.name);
+    if (e.isDirectory()) walk(p, onFile);
+    else onFile(p);
+  }
+}
+
+/** 探测可用的 PHP CLI，用于注释剥离与语法校验 */
+function detectPhp() {
+  for (const bin of [process.env.PHP_BINARY, 'php'].filter(Boolean)) {
+    try {
+      execFileSync(bin, ['-r', 'echo 1;'], { stdio: 'pipe' });
+      return bin;
+    } catch (e) {
+      // 换下一个候选
+    }
+  }
+  return null;
+}
+
+/**
+ * 剥离发布包里的全部注释
+ *
+ * 注释对下载主题的用户没有价值：行内 HTML 注释会真正传输到浏览器，
+ * 其余则暴露实现细节并占用体积。
+ *
+ * dist/ 下的 CSS / JS 先经 webpack 压缩器处理，非注释内容已清空，
+ * 仅存的许可证横幅属 MIT 授权要求，予以保留。
+ */
+function stripComments(themeDir) {
+  const php = detectPhp();
+  if (!php) fail('未找到 PHP CLI，无法剥离注释；可用环境变量 PHP_BINARY 指定 php 路径');
+
+  // index.php 的首个文档注释是 Typecho 的主题元信息，必须保留
+  execFileSync(php, [path.join(__dirname, 'strip-comments.php'), themeDir, '--keep-index-doc'], {
+    stdio: 'inherit',
+  });
+
+  const phpFiles = [];
+  walk(themeDir, (p) => {
+    if (p.endsWith('.php')) phpFiles.push(p);
+  });
+
+  // 语法校验：剥离若破坏代码，必须挡在这里，而不是等用户装上后白屏
+  for (const file of phpFiles) {
+    try {
+      execFileSync(php, ['-l', file], { stdio: 'pipe' });
+    } catch (e) {
+      fail(`注释剥离破坏了语法: ${path.relative(ROOT, file)}\n${e.stderr || e.message}`);
+    }
+  }
+
+  console.log(`[package] 已剥离注释，${phpFiles.length} 个 PHP 文件语法校验通过`);
+}
+
 function main() {
   const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   const version = String(pkg.version || '');
@@ -64,7 +117,7 @@ function main() {
 
   // 构建产物是运行时依赖，缺失说明忘了 npm run build
   if (!fs.existsSync(path.join(ROOT, 'dist', 'main.min.css'))) {
-    fail('dist/main.min.css 不存在，请先跑 npm run build');
+    fail('dist/main.min.css 不存在，请先运行命令 npm run build');
   }
 
   const missing = INCLUDE.filter((n) => !fs.existsSync(path.join(ROOT, n)));
@@ -77,37 +130,35 @@ function main() {
   fs.mkdirSync(themeDir, { recursive: true });
   for (const name of INCLUDE) copy(path.join(ROOT, name), path.join(themeDir, name));
 
-  let files = 0;
-  let bytes = 0;
-  const walk = (dir) => {
-    for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
-      const p = path.join(dir, e.name);
-      if (e.isDirectory()) walk(p);
-      else { files += 1; bytes += fs.statSync(p).size; }
-    }
+  const measure = () => {
+    let files = 0;
+    let bytes = 0;
+    walk(themeDir, (p) => {
+      files += 1;
+      bytes += fs.statSync(p).size;
+    });
+    return { files, bytes };
   };
-  walk(themeDir);
+
+  const before = measure();
+  stripComments(themeDir);
+  const after = measure();
 
   const zipPath = path.join(OUT_DIR, `${themeName}-${version}.zip`);
 
-  // 压缩对象是整个 stage/<主题名>/：这样 zip 里的顶层目录就是 bubble/，
+  // 压缩对象是 stage/<主题名>/：这样 zip 里的顶层目录就是 bubble/，
   // 用户解压到 usr/themes/ 正好落成 usr/themes/bubble/。
   // 打包清单已在复制阶段生效，这里不需要再逐项过滤。
-  if (process.platform === 'win32') {
-    const args = ['-NoProfile', '-NonInteractive', '-Command',
-      `Compress-Archive -Force -LiteralPath '${themeDir.replace(/'/g, "''")}'` +
-      ` -DestinationPath '${zipPath.replace(/'/g, "''")}'`];
-    execFileSync('powershell.exe', args, { stdio: 'inherit' });
-  } else {
-    execFileSync('zip', ['-rq', zipPath, themeName], { cwd: STAGE, stdio: 'inherit' });
-  }
+  zipDirectory(STAGE, zipPath);
 
   fs.rmSync(STAGE, { recursive: true, force: true });
 
   const zipSize = fs.statSync(zipPath).size;
+  const saved = ((before.bytes - after.bytes) / 1024).toFixed(1);
   console.log(`[package] ${path.relative(ROOT, zipPath)}`);
-  console.log(`[package] 主题 ${themeName} ${version}｜${files} 个文件｜` +
-    `源 ${(bytes / 1024).toFixed(1)} KiB → 压缩后 ${(zipSize / 1024).toFixed(1)} KiB`);
+  console.log(`[package] 主题 ${themeName} ${version}｜${after.files} 个文件｜` +
+    `源 ${(before.bytes / 1024).toFixed(1)} KiB → 去注释后 ${(after.bytes / 1024).toFixed(1)} KiB` +
+    `（省 ${saved} KiB）｜压缩包 ${(zipSize / 1024).toFixed(1)} KiB`);
   console.log('[package] 解压到 usr/themes/ 即可覆盖安装');
 }
 
