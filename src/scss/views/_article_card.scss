@@ -28,8 +28,6 @@
       }
     }
 
-    // 为什么不使用阴影来制作no-image，因为那个框使用了透明度 lazyloaded
-    // 用户往下滑动的时候，阴影才加载，透明度opacity从0到1变化时候会出现闪烁
     .no-image {
       top: 0;
       left: 0;

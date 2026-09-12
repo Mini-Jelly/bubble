@@ -1,12 +1,8 @@
 // 右下角悬浮按钮组（个性化设置 + 回到顶部）
 //
-// 合成一组的两个理由：
-//   1. 两者都固定在右下角，分开定位迟早互相压盖，层级也各写各的；
-//   2. 回到顶部收起时只做 visibility 隐藏、仍然占位，设置按钮的位置因此恒定，
-//      不会随着滚动出现/消失而上下跳动。
-//
-// 层级统一走 :root 的 --z-fab（见 _color.scss），刻意压在侧边栏蒙版之下 ——
-// 手机端抽屉或设置面板打开时会被蒙版一起盖住。
+// 两者都固定在右下角，分开定位会互相压盖、层级也各写各的，故合成一组统一层高。
+// 回到顶部收起时只做 visibility 隐藏、仍然占位，设置按钮的位置因此不随滚动跳动。
+// 层级走 :root 的 --z-fab，刻意压在侧边栏蒙版之下。
 .fab-group {
   position: fixed;
   right: 20px;
@@ -63,10 +59,8 @@
   }
 }
 
-// 回到顶部
-//
-// 默认隐藏。用 visibility 而不是 display：过渡才有中间态可插值，而且
-// visibility: hidden 的元素不可聚焦，键盘 Tab 不会停在隐藏按钮上。
+// 回到顶部：默认隐藏。用 visibility 而非 display —— 过渡才有中间态可插值，
+// 且 visibility: hidden 的元素不可聚焦，键盘 Tab 不会停在上面。
 .back-to-top {
   opacity: 0;
   visibility: hidden;
@@ -81,9 +75,8 @@
   }
 }
 
-// 设置面板的定位基准。
-// 用 relative 而非 absolute：它仍然是 .fab-group 的 flex 子项，
-// 参与纵向排布（absolute 会让它脱离流，两个按钮就会重叠）。
+// 设置面板的定位基准。必须是 relative 而非 absolute：
+// 它仍是 .fab-group 的 flex 子项，脱流会让两个按钮重叠。
 .fab-settings {
   position: relative;
 }
@@ -135,12 +128,10 @@
   }
 
   &__reset {
-    padding: 2px 6px;
+    padding: 10px;
     font-family: inherit;
     font-size: 0.75rem;
-    /* 面板底色是 --card1：暗色下 --text3(gray-7) 与它只有约 1.4:1，
-       连 --text2(gray-6) 也才 3.5:1 —— 都撑不起一个「可点的按钮」，
-       所以这里直接用最亮的一档 */
+    /* 面板底色是 --card1，暗色下只有 --text1 有足够对比度（--text2 仅 3.5:1） */
     color: var(--text1);
     background: none;
     border: 0;
@@ -161,6 +152,7 @@
   }
 
   &__note {
+    text-align: center;
     margin: 12px 0 0;
     font-size: 0.75rem;
     line-height: 1.15rem;
@@ -205,9 +197,8 @@
   background-color: var(--card2);
   border-radius: var(--radius);
 
-  // 滑块的位置完全由 JS 写进来的 --seg-index 决定，
-  // 不需要为「选中第 n 项」各写一份样式，增删选项也不用改 CSS。
-  // translateX 的百分比基准是元素自身宽度，而滑块宽度正好是一格，故直接乘 index。
+  // 滑块位置由 JS 写入的 --seg-index 决定，无需为「选中第 n 项」各写一份样式。
+  // translateX 的百分比基准是元素自身宽度，滑块宽度正好一格，故直接乘 index。
   &__thumb {
     position: absolute;
     top: 2px;
@@ -339,16 +330,15 @@
   display: grid;
   // 12 个色块固定铺 6 列。写成 auto-fit 会在窄面板里跳成 5 列 / 4 列，反而更乱
   grid-template-columns: repeat(6, 1fr);
-  gap: 6px;
+  gap: 12px 0px;
   justify-items: center;
 
   .swatch {
     width: 24px;
     height: 24px;
     padding: 0;
-    // 色块自己带 theme="x"（见 views/fab.php），而调色板选择器已从
-    // :root[theme=x] 解绑为 [theme=x]，所以这里取到的就是该颜色的真实主色，
-    // 不需要在别处再抄一遍 12 组色值
+    // 色块自带 theme="x"（见 views/fab.php），而调色板选择器是 [theme=x] 而非
+    // :root[theme=x]，因此这里取到的就是该色真实主色，无需另抄 12 组色值
     background-color: var(--theme-6);
     border: 1px solid var(--border);
     border-radius: 50%;

@@ -77,10 +77,9 @@
   }
   ?>
   <?php
-  // 全局设置（明暗 / 字号 / 字体 / 主题色）已迁到右下角悬浮按钮组，
-  // 与「回到顶部」合成一组 —— 见 views/fab.php。
-  // 上面的 SVG 图标符号仍留在本文件：nav 在 body 里最先渲染，
-  // 后面的 fab.php 引用 #icon-setting 时才不会踩到「符号尚未定义」。
+  // 全局设置已迁到右下角悬浮按钮组（见 views/fab.php）。
+  // SVG 图标符号仍留在本文件：nav 在 body 里最先渲染，fab.php 引用 #icon-setting 时
+  // 才不会踩到「符号尚未定义」。
   ?>
 </nav>
 <!-- 手机端侧边栏。自身是滚动容器，标记 data-lenis-prevent 后

@@ -2,14 +2,13 @@
 /* 主题函数 */
 
 /**
- * 主题色选项表：value => 中文名
- *
- * 后台设置页（core/config.php）与前台「个性化设置」面板（views/fab.php）
- * 必须使用同一份名单：面板会把每个 value 输出成色块，漏一个访客就少一个可选色，
- * 多一个则是后台选不出来的「幽灵项」。因此抽到这里做唯一真源。
- *
- * @return array<string, string>
- */
+  * 主题色选项表：value => 中文名
+  *
+  * 后台（core/config.php）与访客面板（views/fab.php）共用同一份名单，
+  * 两处不同步会出现「访客可选、站长选不出」的幽灵项。
+  *
+  * @return array<string, string>
+  */
 function bubbleThemeColors(): array
 {
   return [
@@ -29,13 +28,12 @@ function bubbleThemeColors(): array
 }
 
 /**
- * 正文字号档位表：value => 中文名
- *
- * 顺序即滑条的档位顺序（由小到大），前台滑条按下标取值，
- * 因此这里不能随意调序，调整顺序等同于调整 UI 语义。
- *
- * @return array<string, string>
- */
+  * 正文字号档位表：value => 中文名
+  *
+  * 数组顺序即滑条的档位顺序，前台按下标取值，调序等同于改 UI 语义。
+  *
+  * @return array<string, string>
+  */
 function bubbleFontSizes(): array
 {
   return [
@@ -47,16 +45,15 @@ function bubbleFontSizes(): array
 }
 
 /**
- * 访客级设置的「后台默认值」
- *
- * 优先级模型固定为：访客在本机做出的选择（localStorage）> 这里返回的后台默认值。
- * header.php 的首屏内联脚本与 views/fab.php 的设置面板都要用，
- * 集中在这里才不会出现「面板显示的当前值」与「实际生效的值」对不上。
- *
- * 明暗与字号没有对应的后台配置项，默认值写死在调用方（auto / m）。
- *
- * @return array{themeColor: string, fontFamily: string}
- */
+  * 访客级设置的后台默认值
+  *
+  * 优先级固定为「访客的 localStorage 覆盖 > 此处返回的默认值」。
+  * header.php 的首屏内联脚本与 views/fab.php 面板共用一份，
+  * 否则会出现面板显示的当前值与实际生效值对不上。
+  * 明暗与字号没有后台配置项，默认值写死在调用方（auto / m）。
+  *
+  * @return array{themeColor: string, fontFamily: string}
+  */
 function bubbleVisitorDefaults(): array
 {
   $options = Helper::options();
@@ -90,27 +87,18 @@ function getDaysSinceLastModified(int $modified): int
 }
 
 /**
- * 取得「当前归档页自身」的规范链接（供 rel=canonical / og:url 使用）
- *
- * 注意不能直接用 $this->permalink：
- * Widget_Archive 会把查出来的文章行压进 $this->row，
- * 于是首页、分类、日期、搜索这些列表页上它返回的是「最后一篇文章」的地址
- * （实测首页拿到的是一篇随机文章，喂给 canonical 会直接误导搜索引擎）。
- *
- * ⚠️ 本函数是全局作用域函数，只能使用 Widget_Archive 的 public 方法，
- * 不能读 $archive->options / $archive->currentPage 这两个裸属性：
- *   - $options 是 protected、$currentPage 是 private；
- *   - 模板里 $this->options 之所以能用，是因为 need() 定义在 Widget\Archive 里，
- *     被 include 的模板继承了该类作用域；
- *   - 一旦离开类作用域（比如传进本函数），读取会落到 Widget::__get()，
- *     而它只认 row 键 / ___xxx() 魔术方法 / 插件钩子，两者都不满足 → 静默返回 null。
- * 实测后果：Router::url() 的 prefix 为空，URL 退化成相对路径
- * （/index.php/page/2/ 拿到 "/"，/index.php/2026/page/2/ 拿到 "/2026/"），
- * 同时分页判断也会因为 (int)null === 0 而整段失效。
- *
- * @param Widget_Archive $archive 归档 Widget，模板中即 $this
- * @return string 取不到时返回空字符串，由调用方决定兜底
- */
+  * 取得「当前归档页自身」的规范链接（供 rel=canonical / og:url 使用）
+  *
+  * 不能用 $this->permalink：Widget_Archive 会把文章行压进 $this->row，
+  * 列表页拿到的是最后一篇文章的地址，喂给 canonical 会误导搜索引擎。
+  *
+  * 也不能读 $archive->options / $archive->currentPage：二者是 protected / private，
+  * 离开 Widget\Archive 类作用域后读取会落到 Widget::__get()（只认 row 键 /
+  * ___xxx() / 插件钩子）而静默返回 null，导致 URL 退化成相对路径、分页判断失效。
+  *
+  * @param Widget_Archive $archive 归档 Widget，模板中即 $this
+  * @return string 取不到时返回空字符串，由调用方决定兜底
+  */
 function getArchivePermalink($archive): string
 {
   $archiveType = $archive->getArchiveType();
@@ -120,9 +108,9 @@ function getArchivePermalink($archive): string
     return (string) $archive->permalink;
   }
 
-  // Typecho 内部已为每种归档算好了「第 1 页」的规范地址：
+  // Typecho 已算好每种归档「第 1 页」的规范地址：
   // index → siteUrl，category / tag / author / date / search → Router::url() 的结果。
-  // getArchiveUrl() 是 public 方法，可以放心在类外调用。
+  // getArchiveUrl() 是 public 方法，可放心在类外调用。
   $baseUrl = (string) $archive->getArchiveUrl();
 
   // getCurrentPage() 是 public 方法（返回 int），不会踩上面那个坑
@@ -142,9 +130,8 @@ function getArchivePermalink($archive): string
   ];
 
   if ('date' === $archiveType) {
-    // 日期归档要按精度细分：年 / 年月 / 年月日，三种分页路由不同。
-    // 注意 pageRow 里的 month / day 在「只到年」时是字符串 "00"，
-    // 必须用 (int) 归一再判断，否则会误判成月归档。
+    // 日期归档按精度细分（年 / 年月 / 年月日），分页路由各不相同。
+    // month / day 在「只到年」时是字符串 "00"，必须 (int) 归一再判断，否则误判成月归档。
     $pageRow = $archive->getPageRow();
     $month = (int) ($pageRow['month'] ?? 0);
     $day = (int) ($pageRow['day'] ?? 0);
@@ -169,16 +156,15 @@ function getArchivePermalink($archive): string
 }
 
 /**
- * 取文章正文（请求内缓存）
- *
- * Typecho 的 ___content() 既不把结果写回 row，也不做任何缓存：每访问一次
- * $post->content 就要重跑一次 Markdown / autoP 解析。同一篇文章在同一请求
- * 里往往会被取多次（SEO 描述、卡片封面与摘要、正文输出……），
- * 这里按 cid 记一份，保证一篇文章只解析一次。
- *
- * @param object $post 文章对象
- * @return string
- */
+  * 取文章正文（请求内缓存）
+  *
+  * Typecho 的 ___content() 不做缓存，每访问一次 $post->content 就重跑一遍
+  * Markdown / autoP 解析，而同一篇文章在一次请求里会被取多次
+  * （SEO 描述、卡片封面与摘要、正文输出）。这里按 cid 记一份。
+  *
+  * @param object $post 文章对象
+  * @return string
+  */
 function getPostContent($post): string
 {
   static $cache = [];
@@ -197,18 +183,18 @@ function getPostContent($post): string
 }
 
 /**
- * 一次性计算文章卡片所需的「封面图 + 摘要」
- *
- * 之所以把两件事合并到一个函数里，是因为 Typecho 的 ___content() 并不会把结果
- * 写回 row —— 每一次访问 $post->content 都会重新跑一遍 Markdown / autoP 解析。
- * 原先「封面」和「摘要」是两个函数，各自取一次正文，首页 10 篇文章
- * 就是 20 次全文解析。这里统一只取一次。
- *
- * @param object $post   文章对象，通常为 $this 或 Widget_Archive 实例
- * @param int    $length 摘要截取长度
- * @param string $append 摘要结尾省略字符
- * @return array{imgUrl: string, excerpt: string}
- */
+  * 一次性计算文章卡片所需的「封面图 + 摘要」
+  *
+  * 合并成一个函数是为了只解析一次正文：___content() 不做缓存，
+  * 封面与摘要各取一次正文，首页 10 篇就是 20 次全文解析。
+  *
+  * 没有封面时 imgUrl 返回空字符串，调用方据此决定渲染占位块还是 img。
+  *
+  * @param object $post   文章对象，通常为 $this 或 Widget_Archive 实例
+  * @param int    $length 摘要截取长度
+  * @param string $append 摘要结尾省略字符
+  * @return array{imgUrl: string, excerpt: string}
+  */
 function getArticleCardMedia($post, int $length = 120, string $append = '...'): array
 {
   // 自定义字段只查询一次（原实现里封面/摘要各查一次）
@@ -216,14 +202,12 @@ function getArticleCardMedia($post, int $length = 120, string $append = '...'): 
   $image = isset($fields->image) ? (string) $fields->image : '';
   $excerpt = isset($fields->excerpt) ? (string) $fields->excerpt : '';
 
-  // 封面和摘要都有自定义值时，正文完全没有必要解析
+  // 根据自定义字段的值是否为空去解析正文
   $content = ($image === '' || $excerpt === '') ? getPostContent($post) : '';
 
-  if ($image === '') {
-    // 退回正文里的第一张图；仍然没有则用透明像素顶替，减少调用方判断逻辑
-    $image = preg_match('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']+)["\']/i', $content, $matches)
-      ? $matches[1]
-      : getTransparent1x1GIF();
+  // 自定义字段没图，然后匹配到了文章的图
+  if ($image === '' && preg_match('/<img\b[^>]*\bsrc\s*=\s*["\']([^"\']+)["\']/i', $content, $matches)) {
+    $image = $matches[1];
   }
 
   if ($excerpt === '') {
@@ -238,50 +222,16 @@ function getArticleCardMedia($post, int $length = 120, string $append = '...'): 
 }
 
 /**
- * 获取透明的1x1GIF(base64编码)的图片链接
- *
- * @return string
- */
-function getTransparent1x1GIF(): string
-{
-  return "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==";
-}
-
-/**
- * 判断封面地址是不是「没有封面」的占位图
- *
- * getArticleCardMedia() 在文章没有任何图片时会退回一张 1x1 透明 GIF
- * （data:image 开头的 base64），好处是调用方不必到处判空。但真正需要
- * 「要一张能看的封面」的场景（卡片渲染、og:image），还是得把占位图挑出来。
- *
- * 原先两处都裸写 strpos($url, 'data:image') !== 0 —— 一个否定式 strpos
- * 配 if，读起来要先在脑子里取两次反，很容易看错。这里给这个判断一个
- * 说得出口的名字，调用方写 !isPlaceholderImage($url) 即可自解释。
- *
- * @param string $url 封面地址
- * @return bool true = 空地址或占位图，即没有可展示的封面
- */
-function isPlaceholderImage(string $url): bool
-{
-  return '' === $url || 0 === strpos($url, 'data:image');
-}
-
-/**
- * 把配置里填写的资源地址补全成可直接使用的绝对地址
- *
- * 背景：轮播图这类配置项允许写相对路径。而相对路径的解析基准是「当前页面的
- * 地址」，于是同一张图会出现「首页正常、分页和文章页 404」的怪象：
- *   首页  http://localhost/                     → http://localhost/usr/...            ✅
- *   分页  http://localhost/index.php/page/2/    → http://localhost/index.php/page/2/usr/...  ❌
- * 实测分页下图片请求会落到 Typecho 的 404 页（响应体标题就是「页面没找到」），
- * 而首页之所以看着正常，纯粹因为 URL 恰好与站点根重合。
- *
- * 这里统一按站点根补全，对数据库里的存量配置同样生效，无需用户重新保存设置。
- *
- * @param string $url  配置中原样填写的地址
- * @param string $base 补全基准，通常传站点根地址
- * @return string 空串与已是绝对形式的地址都原样返回
- */
+  * 把配置里填写的资源地址补全成可直接使用的绝对地址
+  *
+  * 相对路径的解析基准是「当前页面地址」，同一张图会出现首页正常、
+  * 分页与文章页 404 的怪象。按站点根补全后对存量配置同样生效，
+  * 无需用户重新保存设置。
+  *
+  * @param string $url  配置中原样填写的地址
+  * @param string $base 补全基准，通常传站点根地址
+  * @return string 空串与已是绝对形式的地址都原样返回
+  */
 function resolveResourceUrl(string $url, string $base): string
 {
   $url = trim($url);
@@ -364,8 +314,14 @@ function renderArticleCard(array $data): string
 
   // 显式解构出模板需要的变量。原先用 extract() 会把 $data / $templatePath
   // 这类内部变量一起炸进作用域，模板里一旦出现同名键就会互相覆盖。
-  ['imgUrl' => $imgUrl, 'title' => $title, 'excerpt' => $excerpt,
-    'category' => $category, 'time' => $time, 'permalink' => $permalink] = $data;
+  [
+    'imgUrl' => $imgUrl,
+    'title' => $title,
+    'excerpt' => $excerpt,
+    'category' => $category,
+    'time' => $time,
+    'permalink' => $permalink
+  ] = $data;
 
   $templatePath = dirname(__DIR__) . '/views/article_card.php';
 
@@ -392,15 +348,15 @@ function renderArticleCard(array $data): string
 }
 
 /**
- * 将正文里的 <img> 包装成 spotlight 灯箱链接
- *
- * 图片统一使用原生 loading="lazy"（现代浏览器均已支持，老浏览器会退化为
- * 立即加载，不会出错），因此不再依赖 lazysizes。
- *
- * @param string $content     已渲染的文章正文
- * @param string $fallbackAlt 图片缺少 alt 时使用的兜底文本，通常传文章标题
- * @return string
- */
+  * 将正文里的 <img> 包装成 spotlight 灯箱链接
+  *
+  * 图片统一使用原生 loading="lazy"，老浏览器会退化为立即加载，
+  * 因此不依赖任何懒加载库。
+  *
+  * @param string $content     已渲染的文章正文
+  * @param string $fallbackAlt 图片缺少 alt 时使用的兜底文本，通常传文章标题
+  * @return string
+  */
 function wrapContentImages(string $content, string $fallbackAlt = ''): string
 {
   // 匹配整个 img 标签（[^>] 天然支持跨行，无需 s 修饰符）
@@ -438,14 +394,13 @@ function wrapContentImages(string $content, string $fallbackAlt = ''): string
 }
 
 /**
- * 读取主题版本号（取 index.php 主题头注释里的 @version）
- *
- * index.php 是 Typecho 的主题入口，其头部注释里的 @version 由
- * update_version.js 从 package.json 同步而来，本来就是版本号的唯一真源。
- * 这里不另立真源，只做一次解析并缓存。
- *
- * @return string 解析失败时返回 '0'，调用方无需判空
- */
+  * 读取主题版本号（index.php 主题头注释里的 @version）
+  *
+  * 该值由 scripts/update_version.js 从 package.json 同步而来，是版本号的唯一真源；
+  * 这里不另立真源，只解析一次并缓存。
+  *
+  * @return string 解析失败时返回 '0'，调用方无需判空
+  */
 function getThemeVersion(): string
 {
   static $version = null;
@@ -470,20 +425,16 @@ function getThemeVersion(): string
 }
 
 /**
- * 给 dist 下的静态资源生成缓存击穿参数
- *
- * 主题更新后文件名不变（始终是 main.min.css），浏览器会长期命中旧产物，
- * 表现为「明明改了却没生效」，而且很难自查 —— 本轮排查前端问题时，
- * headless 实例就一直在跑几天前的旧 CSS。
- *
- * 组成：版本号 + 文件 mtime
- *   @version  随发版递增，保证跨版本一定失效
- *   mtime     每次重新构建都会变，保证同一版本内的多次构建也立刻生效，
- *             且不需要人工维护任何额外的版本号
- *
- * @param string $relativePath 相对主题根目录的路径，如 'dist/main.min.css'
- * @return string
- */
+  * 给 dist 下的静态资源生成缓存击穿参数
+  *
+  * 主题更新后文件名不变，浏览器会长期命中旧产物，表现为「明明改了却没生效」。
+  *
+  * 组成是「版本号 + 文件 mtime」：前者保证跨版本失效，后者保证同一版本内的
+  * 多次重新构建也立刻生效，且都不需要人工维护。
+  *
+  * @param string $relativePath 相对主题根目录的路径，如 'dist/main.min.css'
+  * @return string
+  */
 function getAssetVersion(string $relativePath): string
 {
   $file = dirname(__DIR__) . '/' . ltrim($relativePath, '/');

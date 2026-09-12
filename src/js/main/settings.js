@@ -1,24 +1,19 @@
 import { getById, setHtml } from './global.js';
 
 /**
- * 访客级个性化设置（右下角悬浮面板）
- *
- * 分层原则，务必保持：
- *   后台 = 站长设定的「默认值」，由 PHP 写进每个控件的 data-default
- *   前台 = 访客在本机做出的「覆盖」，存在 localStorage，优先级更高
- * 访客没动过的项一律走后台默认值、不写 localStorage；「恢复默认」= 清掉本机覆盖。
- * 所以后台改配色 / 改字体默认值，对没动过设置的访客是立刻生效的。
- *
- * 首屏不闪的那一半在 views/header.php 的内联阻塞脚本里（它必须在 CSS 生效前
- * 就把四个属性写到 <html> 上），这里只负责交互、持久化与控件同步。
- *
- * 新增一个设置项的完整步骤：
- *   1. core/config.php  加后台选项（需要站长可调默认值时）
- *   2. views/fab.php   加一个带 data-setting-key / data-default 的控件
- *   3. 本文件的 SETTINGS 里补一条「存储键 + 落到 html 的属性」
- *   4. views/header.php 的 DEFAULTS / ALLOWED 里补同一个键
- * 控件类型（分段 / 滑条 / 色块）与可取值都由 DOM 自己声明，这里不需要分支。
- */
+  * 访客级个性化设置（右下角悬浮面板）
+  *
+  * 分层原则，务必保持：
+  *   后台 = 站长设定的默认值，由 PHP 写进每个控件的 data-default
+  *   前台 = 访客在本机的覆盖，存在 localStorage，优先级更高
+  *   访客没动过的项走后台默认值、不写 localStorage；「恢复默认」= 清掉本机覆盖
+  * 因此站长改默认配色 / 字体，对没动过设置的访客立刻生效。
+  *
+  * 首屏不闪的那一半在 views/header.php 的内联阻塞脚本里（它必须在 CSS 生效前就把四个
+  * 属性写到 <html> 上），这里只负责交互、持久化与控件同步。
+  * 新增设置项要同步四处：core/config.php 选项、views/fab.php 控件、本文件的 SETTINGS、
+  * views/header.php 的 DEFAULTS / ALLOWED。
+  */
 
 // 设置项 → localStorage 键 / <html> 上的属性名。
 // 这四个键必须与 views/header.php 的 DEFAULTS 一一对应，改一处必须改两处。
@@ -78,11 +73,11 @@ class SettingsPanel {
   }
 
   /**
-   * 收集全部设置项。
-   *
-   * 可选值统一从控件内部的 [data-value] 读取：分段控件是按钮，滑条是刻度。
-   * 于是「增删档位 / 增删配色」只需要改 PHP，这个文件完全不用动。
-   */
+    * 收集全部设置项
+    *
+    * 可选值统一从控件内部的 [data-value] 读取（分段控件是按钮，滑条是刻度），
+    * 因此增删档位 / 配色只需改 PHP，本文件不用动。
+    */
   collectFields() {
     this.panel.querySelectorAll('[data-setting-key]').forEach((el) => {
       const key = el.dataset.settingKey;
@@ -121,11 +116,10 @@ class SettingsPanel {
   }
 
   /**
-   * 把控件同步到「当前生效值」。
-   *
-   * 不重新写 <html> 上的属性 —— 首屏那段内联脚本已经写好了，
-   * 这里再写一遍就等于多出第二份真源，两边迟早对不上。
-   */
+    * 把控件同步到「当前生效值」
+    *
+    * 不回写 <html> 上的属性：首屏内联脚本已经写过，再写一遍等于多出第二份真源。
+    */
   syncAll() {
     this.fields.forEach((field, key) => {
       const stored = readStored(SETTINGS[key].storageKey);
@@ -189,12 +183,11 @@ class SettingsPanel {
   }
 
   /**
-   * 应用一次改动。
-   *
-   * @param {boolean} persist 是否写入 localStorage。
-   *   拖滑条时会产生几十次 pointermove，逐个落盘既慢又没意义，
-   *   所以拖动过程只传 false 做实时预览，松手时才落盘。
-   */
+    * 应用一次改动
+    *
+    * @param {boolean} persist 是否写入 localStorage。拖滑条会产生几十次 pointermove，
+    *   拖动过程传 false 只做实时预览，松手时才落盘。
+    */
   commit(key, value, persist = true) {
     const field = this.fields.get(key);
     if (!field || !field.values.includes(value)) return;
@@ -290,10 +283,8 @@ class SettingsPanel {
 
       dragging = true;
       slider.classList.add('is-dragging');
-      // 指针捕获：拖到面板外也不丢事件，触屏不必另外处理。
-      // 指针在事件派发到手之前就失效（或事件本身是合成出来的）时这里会抛错，
-      // 但拖动依赖的是后续事件的坐标换算，没有捕获也照常可用，所以吞掉即可 ——
-      // 不能让它把下面的首次同步一起中断。
+      // 指针捕获：拖到面板外也不丢事件。合成事件或指针提前失效时这里会抛错，
+      // 但拖动只依赖后续事件的坐标换算，没有捕获也照常可用，故吞掉即可。
       try {
         slider.setPointerCapture(event.pointerId);
       } catch {

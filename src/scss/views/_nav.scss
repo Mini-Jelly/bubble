@@ -63,10 +63,20 @@ $nav-height: 48px;
   &-logo {
     position: relative;
     height: #{$nav-height};
+    // 宽度上限：左右各留一个 nav-height 给汉堡与右侧按钮，避免宽 logo 把导航栏撑破
+    max-width: calc(100% - #{$nav-height * 2});
+    // 禁止收缩：img 的 max-width 是百分比时，Chrome 推不出本 flex item 的自动最小尺寸，
+    // 桌面端空间紧张会被 .nav-form 挤压（实测 120px → 67px）；收缩交给 width: 100% 的搜索框承担
+    flex-shrink: 0;
 
     img {
       width: auto;
       height: #{$nav-height};
+      // 仅当 logo 宽到触发上面的 max-width 时生效：按原比例缩放而不是压扁
+      max-width: 100%;
+      object-fit: contain;
+      object-position: left center;
+      // 不要改成 height: auto + max-height：img 失去确定高度基准后会被搜索框挤小（120×48 → 66×27）
     }
   }
 
@@ -195,6 +205,25 @@ $nav-height: 48px;
       padding: 0 15px;
       text-align: center;
       width: 100%;
+    }
+  }
+}
+
+// 窄屏覆盖必须写在 .nav 基础规则之后：@media 不参与特异性计算，
+// 同优先级靠先后决胜，留在文件开头的响应式区会被后面的 space-between 盖掉。
+@media only screen and (max-width: 833px) {
+
+  // 窄屏只剩「侧边栏按钮 + LOGO」两个元素，space-between 会把它们顶到最左与最右，
+  // logo 因此严重偏右（实测中心 330px vs 视口中心 195px）。
+  // 改为 logo 走 flex 居中，侧边栏按钮脱流钉在左上。
+  .nav {
+    justify-content: center;
+
+    // 脱流后不参与 justify-content 分配，logo 的居中基准才是整条导航栏
+    #sidebarOutBtn {
+      position: absolute;
+      left: 0;
+      top: 0;
     }
   }
 }

@@ -1,18 +1,15 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__')) exit;
 
 /* ------------------------------------------------------------------
- * 右下角悬浮按钮组：「个性化设置」+「回到顶部」
- * ------------------------------------------------------------------
- * 合成一组的原因：两者都固定在右下角，分开定位迟早互相压盖，层级也各写各的。
- * 合成后统一层高（--z-fab），回到顶部收起时只做 visibility 隐藏、仍然占位，
- * 因此设置按钮不会随着滚动出现/消失而上下跳动。
- *
- * 面板沿用「后台默认值 + 访客本机覆盖」两层模型：
- *   控件的 data-default 由 PHP 输出后台默认值，JS 只在访客改过时用
- *   localStorage 覆盖它（见 src/js/main/settings.js）。
- *   控件的可选值清单也全部由 PHP 渲染 —— 想增删档位/颜色，只改
- *   core/func.php 里的 bubbleFontSizes() / bubbleThemeColors()，JS 无需改动。
- */
+  * 右下角悬浮按钮组：「个性化设置」+「回到顶部」
+  * ------------------------------------------------------------------
+  * 合成一组以统一层高（--z-fab）；回到顶部收起时只做 visibility 隐藏、仍然占位，
+  * 设置按钮因此不随滚动上下跳动。
+  *
+  * 面板沿用「后台默认值 + 访客本机覆盖」两层模型：data-default 由 PHP 输出后台默认值，
+  * JS 只在访客改过时用 localStorage 覆盖（见 src/js/main/settings.js）。
+  * 可选值清单也全部由 PHP 渲染，增删档位 / 颜色只需改 core/func.php，JS 无需改动。
+  */
 $visitorDefaults = bubbleVisitorDefaults();
 $fontSizes = bubbleFontSizes();
 $themeColors = bubbleThemeColors();
@@ -92,7 +89,7 @@ $showBackToTop = ($this->options->backToTop ?? 'on') === 'on';
           data-default="<?= htmlspecialchars($visitorDefaults['fontFamily'], ENT_QUOTES, 'UTF-8') ?>">
           <span class="segmented__thumb" aria-hidden="true"></span>
           <button type="button" role="radio" aria-checked="false" data-value="system">系统</button>
-          <button type="button" role="radio" aria-checked="false" data-value="site">站点</button>
+          <button type="button" role="radio" aria-checked="false" data-value="site">HarmonyOS Sans SC</button>
         </div>
       </div>
 
@@ -114,7 +111,7 @@ $showBackToTop = ($this->options->backToTop ?? 'on') === 'on';
         </div>
       </div>
 
-      <p class="settings-panel__note">设置只保存在本机浏览器，不会影响其他访客。</p>
+      <p class="settings-panel__note">设置只保存在本地浏览器内</p>
     </div>
   </div>
 

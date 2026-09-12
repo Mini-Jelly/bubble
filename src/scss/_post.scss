@@ -167,6 +167,8 @@
   // 文章元数据
   &-meta {
     text-align: center;
+    margin: 0.4rem 0;
+    padding: 0;
 
     li {
       display: inline-block;
@@ -192,6 +194,8 @@
   &-modified {
     text-align: center;
     color: var(--text2);
+    margin: 0.4rem 0;
+    padding: 0;
   }
 
   //文章内容
