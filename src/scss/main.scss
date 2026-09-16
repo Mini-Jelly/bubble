@@ -190,12 +190,7 @@ body {
    此前三条 @font-face 的 family / weight / style 完全相同且没有 unicode-range，
    浏览器只会采用最后一条，另外两片等于白放（约 238KB）。
    加上互不重叠的 unicode-range 后，浏览器只下载页面真正用到的分片：
-   纯英文 / 标点页面只需 7.9KB 的 us117。
-
-   下面的区间是用 fontTools 读 cmap 实测出来的，与字体真实覆盖一致：
-     us117  107 个字形  U+0021-007E + 若干标点/全角符号
-     1900_1 1900 个字形 U+4E00-707F
-     1600_2 1600 个字形 U+7089-9F9F */
+   纯英文 / 标点页面只需 7.9KB 的 us117。 */
 @font-face {
   font-family: "us3117";
   src: url("../fonts/us117.woff2") format("woff2");

@@ -6,8 +6,10 @@
     <h1>🥳标签云</h1>
     <div class="tag-cloud-list">
       <?php while ($tags->next()): ?>
-        <a href="<?php $tags->permalink(); ?>" rel="tag" class="size-<?php $tags->split(5, 10, 20, 30); ?>"
-          title="<?php $tags->count(); ?> 个相关"><?php $tags->name(); ?></a>
+        <a href="<?php $tags->permalink(); ?>" rel="tag"
+          title="<?php echo ($tags->name . '  ' . $tags->count . '个相关') ?>">
+          <?php $tags->name(); ?>
+        </a>
       <?php endwhile; ?>
     </div>
   </div>
