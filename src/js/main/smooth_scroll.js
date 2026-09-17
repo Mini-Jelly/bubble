@@ -4,9 +4,9 @@
   * CSS 的 scroll-behavior: smooth 只作用于程序化滚动（锚点跳转、scrollTo），对鼠标滚轮
   * 完全无效 —— 滚轮走的是浏览器原生滚动，要平滑就必须由 JS 接管 wheel 事件。
   *
-  * 选 Lenis 是因为它用原生 scrollTop 驱动，而非给内容套一层 transform：本站 3 处
-  * position: fixed（.sidebar / .sidebar-backdrop / .post-toc）以及目录依赖的
-  * IntersectionObserver 都不受影响，transform 类库会把它们全部破坏。
+  * 选 Lenis 是因为它用原生 scrollTop 驱动，而非给内容套一层 transform：本站几处
+  * position: fixed（.sidebar / .scrim / .settings-panel / .post-toc）以及目录与导航阴影
+  * 依赖的 IntersectionObserver 都不受影响，transform 类库会把它们全部破坏。
   */
 import Lenis from "lenis";
 // Lenis 的配套样式：给 [data-lenis-prevent] 容器加 overscroll-behavior: contain，

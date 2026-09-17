@@ -1,9 +1,13 @@
+@use "motion.scss" as *;
+
 .post {
-  padding: 20px 3%;
-  box-shadow: var(--box-shadow);
-  background-color: var(--card1);
-  border-radius: var(--radius);
-  margin-top: 20px;
+  padding: var(--space-5) 3%;
+  /* 正文卡片用 --shadow-sm：页面里同时存在的浮层（目录、设置面板）才用更大的阴影，
+     层级靠对比建立，不是靠把所有东西都抬高 */
+  box-shadow: var(--shadow-sm);
+  background-color: var(--surface-1);
+  border-radius: var(--radius-md);
+  margin-top: var(--space-5);
   word-wrap: break-word;
   position: relative;
 
@@ -24,9 +28,12 @@
   samp {
     margin: 0 3px;
     padding: 2px 4px;
-    color: var(--theme-9);
-    border-radius: 4px;
-    background-color: var(--theme-0);
+    /* 原先是 theme-9 文字压 theme-0 底。这两个色阶不随明暗模式翻转，
+       于是暗色下会跳出一块浅色高亮，比正文还抢眼。
+       改用 primary-container / on-primary-container —— 它们按模式取不同的混色比例 */
+    color: var(--on-primary-container);
+    border-radius: var(--radius-xs);
+    background-color: var(--primary-container);
     font-size: 0.875rem;
     font-family: Menlo, Monaco, Consolas, Lucida Console, Courier New, monospace;
   }
@@ -46,11 +53,13 @@
     display: flex;
     flex-direction: column;
 
-    background: var(--card1);
+    background: var(--surface-1);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 0.75rem;
-    box-shadow: var(--box-shadow);
+    /* 目录是浮在正文之上的独立面板，圆角与阴影都比正文卡片大一档，
+       否则看起来只是正文里的一块，而不是浮层 */
+    border-radius: var(--radius-lg);
+    padding: var(--space-3);
+    box-shadow: var(--shadow-lg);
     // 目录是浮在正文之上的独立面板；层级统一走 :root 的 --z-* 令牌
     z-index: var(--z-toc);
 
@@ -106,20 +115,23 @@
         display: block;
         text-decoration: none;
         color: var(--text1); // 目录链接跟随正文文本色，而不是正文链接色
-        padding: .2em;
+        padding: .2em var(--space-2);
         margin: .1em 0;
-        border-radius: var(--radius);
-        transition: all 0.2s ease;
+        border-radius: var(--radius-sm);
+        transition: background-color var(--dur-state) var(--ease-standard),
+          color var(--dur-state) var(--ease-standard);
 
         &:hover {
-          background-color: var(--theme-5);
-          color: #fff;
+          /* 悬停走浅色容器、当前小节走实心面。两者都带主题色但深浅相反，
+             于是「鼠标在哪」与「读到哪」不会混淆 */
+          background-color: var(--primary-container);
+          color: var(--on-primary-container);
           cursor: pointer;
         }
 
         &.active {
-          background-color: var(--theme-8);
-          color: #fff;
+          background-color: var(--primary-solid);
+          color: var(--on-primary);
         }
       }
     }
@@ -127,13 +139,22 @@
     // 目录关闭按钮
     &-close-btn {
       font-size: 12px;
-      border-radius: 100px;
+      border-radius: var(--radius-full);
       cursor: pointer;
-      width: 32px;
-      height: 32px;
+      /* 40×40 而不是 32×32：它是键盘与触摸都要够得着的控件 */
+      width: 40px;
+      height: 40px;
       border: none;
       padding: 0;
-      background-color: var(--card2);
+      color: var(--text1);
+      background-color: var(--surface-2);
+      transition: background-color var(--dur-state) var(--ease-standard);
+
+      @include hover-only {
+        &:hover {
+          background-color: var(--bg-hover);
+        }
+      }
     }
 
     // 目录打开兼关闭按钮
@@ -159,7 +180,11 @@
     }
   }
 
-  // 文章标题
+  /* 文章标题。刻意不给 view-transition-name ——
+     曾经试过让列表页被点开的卡片标题与这里的 h1 做共享元素补间，
+     但两个元素的字号（24px vs 30px）、行数、位置都不同，浏览器补间出来
+     是一次生硬的形变拉伸，比没有动画更难受。
+     页面级的交叉淡入（@view-transition）已经足够表达「换页了」。 */
   &-title {
     text-align: center;
   }
@@ -182,10 +207,12 @@
        色值沿用 --link，与正文内链、标签链接保持同一套语义。 */
     a {
       color: var(--link);
-      transition: color 0.2s ease;
+      transition: color var(--dur-state) var(--ease-standard);
 
-      &:hover {
-        color: var(--theme-5);
+      @include hover-only {
+        &:hover {
+          color: var(--theme-5);
+        }
       }
     }
   }
@@ -223,20 +250,26 @@
 
   // 文章末尾标签
   &-tags {
-    margin: 1rem 0;
+    margin: var(--space-4) 0;
 
     a {
-      display: block;
-      border-radius: var(--radius);
       display: inline-block;
-      padding: 0.3125rem;
-      background-color: var(--card2);
-      margin-right: 0.625rem;
+      border-radius: var(--radius-full);
+      padding: 0.3125rem var(--space-3);
+      background-color: var(--surface-2);
+      margin-right: var(--space-2);
+      margin-bottom: var(--space-2);
       color: var(--link);
+      transition: background-color var(--dur-state) var(--ease-standard),
+        color var(--dur-state) var(--ease-standard);
 
-      &:hover {
-        background-color: var(--theme-8);
-        color: #fff;
+      /* 实心面走 --primary-solid + --on-primary，不用写死的 #fff：
+         12 套主题里有三档（yellow / lime / green）必须配深色文字 */
+      @include hover-only {
+        &:hover {
+          background-color: var(--primary-solid);
+          color: var(--on-primary);
+        }
       }
     }
   }

@@ -1,20 +1,18 @@
-$transition-duration: 0.45s;
-$nav-height: 48px;
+@use "../motion.scss" as *;
 
-@mixin card {
-  border-radius: var(--radius);
-  background-color: var(--card1);
-  box-shadow: var(--box-shadow);
-}
+$nav-height: 56px;
 
 // 响应式
 // 屏幕宽度大于等于834
 @media only screen and (min-width: 834px) {
 
-  // 隐藏侧边栏sidebar
+  /* 抽屉形态在宽屏不存在：导航恢复完整形态（搜索 + 分类 + 近期更新），
+     设置也回到右下角的 FAB 组里。
+     蒙版一并藏掉 —— 宽屏的设置面板是非模态浮层，不该把整页压暗。 */
   .sidebar,
+  .scrim,
   #sidebarOutBtn,
-  #sidebar-backdrop {
+  #settingsNavBtn {
     display: none !important;
   }
 }
@@ -40,23 +38,81 @@ $nav-height: 48px;
   z-index: var(--z-nav);
   width: 100%;
   height: #{$nav-height};
-  position: relative;
-  background-color: var(--theme-9);
+  /* sticky 而不是 relative：导航要一直挂在视口顶部。
+     底部抽屉是 body 的另一个子元素，不受这里的 backdrop-filter 影响 */
+  position: sticky;
+  top: 0;
+
+  /* 毛玻璃中性材质，不再是实心的 --theme-9。
+     实心高饱和底色会和 12 套主题互相打架，滚动时整条色带也过于抢眼。
+     主题色改由 logo、选中态与按钮承载。 */
+  background-color: var(--material);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  transition: box-shadow var(--dur-state) var(--ease-standard);
   display: flex;
   flex-direction: row;
   justify-content: space-between;
-  padding: 0 1rem;
+  padding: 0 var(--space-4);
 
-  #sidebarOutBtn {
+  /* 常驻的底部细分隔线。为什么必须有：页面顶部时导航背后就是纯白页面底，
+     没有内容可模糊，80% 白压白仍然让整条导航「消失」——
+     弱的根因不是不透明度不够，是既没有边界也没有颜色。
+     用 inset 阴影而不是 border-bottom：border 会把 56px 的内容区压成 55px，
+     而 inset 阴影不参与布局，还能和滚动阴影写在同一个属性里。 */
+  box-shadow: inset 0 -1px 0 var(--divider);
+
+  /* 不支持毛玻璃时必须退回实心色：半透明底 + 没有模糊 = 能看见底下的文字穿过导航，
+     比不做毛玻璃难看得多 */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--surface-1);
+  }
+
+  /* 滚动后升起阴影，分隔线保留 —— 层次是「一条线」到「一条线 + 一层影」，
+     不是把线换成影 */
+  &.is-scrolled {
+    box-shadow: inset 0 -1px 0 var(--divider), var(--shadow-xs);
+  }
+
+  /* 导航条两端的图标按钮：左边开抽屉、右边开设置。
+     只在窄屏出现 —— 宽屏时导航被搜索框和分类占满，设置仍留在右下角 FAB 组里。 */
+  #sidebarOutBtn,
+  #settingsNavBtn {
     border: none;
     background-color: transparent;
     cursor: pointer;
+    /* 触摸目标与导航条等高，正好铺满 */
     width: #{$nav-height};
     height: #{$nav-height};
     // 让SVG图标居中
     display: flex;
     align-items: center;
     justify-content: center;
+    color: var(--text1);
+    transition: background-color var(--dur-state) var(--ease-standard),
+      transform var(--dur-release) var(--ease-spring);
+
+    svg {
+      fill: currentColor;
+    }
+
+    @include hover-only {
+      &:hover {
+        background-color: var(--bg-hover);
+      }
+    }
+
+    @include pressed {
+      transform: scale(0.94);
+      transition-duration: var(--dur-press);
+      transition-timing-function: var(--ease-press-in);
+    }
+  }
+
+  /* 设置入口默认藏起来，只在窄屏的媒体查询里放出来 ——
+     宽屏时它在这里没有位置，设置走右下角的 FAB。 */
+  #settingsNavBtn {
+    display: none;
   }
 
   // LOGO
@@ -77,6 +133,30 @@ $nav-height: 48px;
       object-fit: contain;
       object-position: left center;
       // 不要改成 height: auto + max-height：img 失去确定高度基准后会被搜索框挤小（120×48 → 66×27）
+      transition: opacity var(--dur-state) var(--ease-standard),
+        transform var(--dur-release) var(--ease-spring);
+
+      /* 主题自带的 logo 是「透明底 + 纯白」，本来是配实心 --theme-9 的深色导航用的。
+         导航换成浅色毛玻璃之后它在浅色下会完全消失，所以按明暗模式反转。
+         如果换成彩色 logo，把这一条去掉，或者另配一份深色版本。 */
+      [color-scheme="light"] & {
+        filter: invert(1);
+      }
+    }
+
+    /* 反馈挂在 img 而不是 a 上：a 是行内元素，无法应用 transform；
+       改成 inline-block 会引入基线间隙，可能把导航栏顶高 */
+    @include hover-only {
+      a:hover img {
+        opacity: 0.82;
+      }
+    }
+
+    a:active img,
+    a.is-pressed img {
+      transform: scale(0.96);
+      transition-duration: var(--dur-press);
+      transition-timing-function: var(--ease-press-in);
     }
   }
 
@@ -86,61 +166,121 @@ $nav-height: 48px;
     position: relative;
     width: 100%;
     height: #{$nav-height};
-    margin: 0 0.5rem;
+    margin: 0 var(--space-2);
 
     button {
       position: absolute;
       background-color: transparent;
       border: none;
       cursor: pointer;
-      outline: none;
-      height: #{$nav-height - 10px};
-      padding: 0 11px;
+      color: var(--text1);
+      height: #{$nav-height - 16px};
+      padding: 0 var(--space-3);
+      border-radius: var(--radius-full);
+      transition: background-color var(--dur-state) var(--ease-standard),
+        transform var(--dur-release) var(--ease-spring);
+
+      svg {
+        fill: currentColor;
+      }
+
+      @include hover-only {
+        &:hover {
+          background-color: var(--bg-hover);
+        }
+      }
+
+      /* 搜索按钮聚焦时 .rotate 会启动 rotateAnimation，动画优先级高于普通声明，
+         此时 transform 被动画接管 —— 背景变化仍可见，反馈不会丢 */
+      @include pressed {
+        transform: scale(0.9);
+        transition-duration: var(--dur-press);
+        transition-timing-function: var(--ease-press-in);
+      }
     }
 
     &-submit {
-      left: 0.5rem;
-      top: 6px;
+      left: var(--space-1);
+      top: 8px;
     }
 
     //搜索框输入
     &-input {
       width: 100%;
-      margin: 5px 0;
+      margin: 8px 0;
       padding: 5px 2.9rem;
-      border-radius: 24px;
-      border: none;
+      border-radius: var(--radius-full);
+      border: 1px solid transparent;
       outline: none;
       line-height: 1.5rem;
-      color: #fff;
-      background-color: rgba(255, 255, 255, 0.3);
+      color: var(--text1);
+      background-color: var(--surface-2);
+      transition: background-color var(--dur-state) var(--ease-standard),
+        border-color var(--dur-state) var(--ease-standard),
+        box-shadow var(--dur-state) var(--ease-standard);
+
+      &:focus {
+        background-color: var(--surface-1);
+        border-color: var(--theme-6);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-6) 18%, transparent);
+      }
 
       &::placeholder {
-        color: inherit;
+        color: var(--text3);
       }
     }
 
     // 清除搜索框信息按钮
     &-clean {
-      top: 6px;
-      right: 0.5rem;
+      top: 8px;
+      right: var(--space-1);
       display: none;
     }
   }
 
   &-category {
     height: #{$nav-height};
-    // width: 100%;
-    line-height: #{$nav-height};
-    color: #fff;
+    display: flex;
+    align-items: center;
 
-    a {
-      color: inherit;
-      display: inline-block;
-      width: 100%;
-      text-align: center;
-      padding: 0 15px;
-      min-width: max-content;
+    /* 「首页」不在分类列表里（它不属于任何分类），所以是独立的一项。
+       与顶级分类项共用同一套外观：同样的内边距、悬停底、当前项指示条。 */
+    .nav-link,
+    >.category-list>li>a {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      height: #{$nav-height};
+      padding: 0 var(--space-4);
+      color: var(--text1);
+      white-space: nowrap;
+      transition: background-color var(--dur-state) var(--ease-standard),
+        color var(--dur-state) var(--ease-standard);
+
+      @include hover-only {
+        &:hover {
+          background-color: var(--bg-hover);
+        }
+      }
+
+      @include pressed {
+        color: var(--link);
+      }
+
+      /* 当前项指示条。3px 主题色横条压在导航下沿，左右缩进与文字对齐。
+         这是导航里唯一的主题色元素 —— 没有它，访客在右下角选了主题色，
+         在导航上完全看不出来。
+         只写在顶级项上（下拉里的子项不带这个类），否则下拉菜单里会多出一条横杠。 */
+      &.is-current::before {
+        content: "";
+        position: absolute;
+        left: var(--space-4);
+        right: var(--space-4);
+        bottom: 0;
+        height: 3px;
+        border-radius: 2px 2px 0 0;
+        background-color: var(--theme-6);
+      }
     }
 
     // 顶级分类列表
@@ -161,11 +301,16 @@ $nav-height: 48px;
         // 顶级分类列表的所有li触发hover,紧接着的.category-list
         &:hover>.category-list {
           display: block;
-          background-color: rgba(38, 38, 38, 0.9);
+          /* 下拉菜单是浮层，用实心表面 + 大阴影，不能跟着导航一起毛玻璃 ——
+             叠两层模糊会让文字发虚 */
+          background-color: var(--surface-1);
+          box-shadow: var(--shadow-lg);
+          border-radius: var(--radius-md);
+          overflow: hidden;
           position: absolute;
           top: 0px;
           left: 100%;
-          min-width: 100px;
+          min-width: 120px;
         }
       }
 
@@ -173,8 +318,24 @@ $nav-height: 48px;
       .category-list {
         display: none;
 
-        li a:hover {
-          background-color: var(--theme-7);
+        /* 下拉里的链接。通用 a 规则已经收窄到顶级项，这里必须自己补布局 ——
+           否则它们会退化成没有内边距、行高只有 24px 的一行字 */
+        li a {
+          display: flex;
+          align-items: center;
+          min-height: 44px;
+          padding: 0 var(--space-4);
+          color: var(--text1);
+          white-space: nowrap;
+          transition: background-color var(--dur-state) var(--ease-standard),
+            color var(--dur-state) var(--ease-standard);
+
+          @include hover-only {
+            &:hover {
+              background-color: var(--bg-hover);
+              color: var(--link);
+            }
+          }
         }
       }
     }
@@ -182,11 +343,12 @@ $nav-height: 48px;
     .category-list-icon::after {
       content: "";
       position: absolute;
-      top: 20px;
-      right: 8px;
+      top: 24px;
+      right: var(--space-2);
       width: 8px;
       height: 8px;
-      border: #fff solid;
+      /* 跟随文字色：导航底色现在随明暗模式变化，写死 #fff 在浅色下会消失 */
+      border: currentColor solid;
       border-width: 1px 1px 0 0;
       transform: rotate(45deg);
     }
@@ -198,13 +360,24 @@ $nav-height: 48px;
     line-height: #{$nav-height};
 
     a {
-      color: #fff;
+      color: var(--text1);
       display: inline-block;
       min-width: -moz-max-content;
       min-width: max-content;
-      padding: 0 15px;
+      padding: 0 var(--space-4);
       text-align: center;
       width: 100%;
+      transition: background-color var(--dur-state) var(--ease-standard);
+
+      @include hover-only {
+        &:hover {
+          background-color: var(--bg-hover);
+        }
+      }
+
+      @include pressed {
+        color: var(--link);
+      }
     }
   }
 }
@@ -213,9 +386,9 @@ $nav-height: 48px;
 // 同优先级靠先后决胜，留在文件开头的响应式区会被后面的 space-between 盖掉。
 @media only screen and (max-width: 833px) {
 
-  // 窄屏只剩「侧边栏按钮 + LOGO」两个元素，space-between 会把它们顶到最左与最右，
-  // logo 因此严重偏右（实测中心 330px vs 视口中心 195px）。
-  // 改为 logo 走 flex 居中，侧边栏按钮脱流钉在左上。
+  // 窄屏只剩「抽屉按钮 + LOGO + 设置按钮」三个元素，space-between 会把它们顶到最左与最右，
+  // logo 因此严重右偏（实测中心 330px vs 视口中心 195px）。
+  // 改为 logo 走 flex 居中，两端的按钮脱流钉在左上 / 右上。
   .nav {
     justify-content: center;
 
@@ -225,156 +398,316 @@ $nav-height: 48px;
       left: 0;
       top: 0;
     }
+
+    /* 右侧原本是空的。把设置放进来之后导航左右对称，
+       同时右下角的 FAB 组从两个按钮减到一个 —— 浮在内容上的东西少了一半。 */
+    #settingsNavBtn {
+      display: flex;
+      position: absolute;
+      right: 0;
+      top: 0;
+    }
   }
 }
 
-// 侧边栏，手机端专用
+/* ---------- 底部抽屉（手机端导航） ----------
+   为什么不是侧滑抽屉：底部抽屉是安卓系统里真实存在、且网页能 100% 复现的组件 ——
+   不需要任何系统权限，单手可达，也符合「从下方升起」的移动端心智。
+   顶部圆角 28px + 拖拽把手，让它读起来是「一个可以推回去的面板」而不是一个页面。
+
+   内部是「钻取」而不是手风琴：每一层是等宽的一屏，点 › 时整条 track 横移一屏。
+   手风琴在这个高度里必然溢出 —— 基础列表 8 行 + 一个 7 项的展开组 ≈ 888px，
+   而 80vh 只有 675px，只能靠滚。 */
 .sidebar {
-  z-index: var(--z-sidebar);
-  top: 0;
-  left: 0;
-  bottom: 0;
   position: fixed;
-  transform: translateX(-100%);
-  background-color: var(--body);
-  transition: transform #{$transition-duration} ease-out;
-  width: 80%;
-  max-width: 400px;
-  min-width: 120px;
-  padding: 15px;
-  font-size: 1.25rem;
-  line-height: 2rem;
-  overflow: scroll;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-sheet);
+
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+
+  /* 抽屉滚到底后继续滑动不应该把页面一起带走 */
+  overscroll-behavior: contain;
   scrollbar-width: none;
   list-style-type: none;
 
+  padding: 0 var(--space-4) var(--space-4);
+  background-color: var(--surface-1);
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+  box-shadow: var(--shadow-lg);
+
+  /* 出场用 --dur-exit + 加速曲线：关闭必须比打开快，否则会显得拖沓。
+     visibility 不参与补间，而是「打开时立刻可见、关闭时延迟到滑完再隐藏」——
+     给它一个时长会让进度 0 的那一帧仍是 hidden，此时 focus() 会静默失败，
+     焦点进不了面板；而关闭时立刻隐藏又会让滑出动画整段看不见。 */
+  transform: translateY(100%);
+  visibility: hidden;
+  transition: transform var(--dur-exit) var(--ease-exit),
+    visibility 0s linear var(--dur-exit);
+
+  /* 拖拽把手。32×4 的胶囊是系统里通用的「这里可以往下推」的暗号 */
+  &-handle {
+    flex: 0 0 auto;
+    width: 32px;
+    height: 4px;
+    margin: var(--space-2) auto var(--space-2);
+    border-radius: var(--radius-full);
+    background-color: var(--text3);
+  }
+
+  /* 钻取导航的标题栏。层级切换时它不动 —— 只有下面的 track 在横移。
+     整个抽屉一起滑会被读成「抽屉在换」，而不是「我在往下一层走」。 */
   &-header {
-    @include card();
-    padding: 15px;
-    margin-bottom: 20px;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 44px;
+    padding-bottom: var(--space-2);
+  }
 
-    form {
-      display: flex;
-      height: 45px;
-      flex-direction: row;
-      align-items: center;
+  &-back {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--text1);
+    background-color: transparent;
+    cursor: pointer;
+    transition: background-color var(--dur-state) var(--ease-standard),
+      transform var(--dur-release) var(--ease-spring);
 
-      input[type="text"] {
+    /* [hidden] 的 UA 默认是 display:none，但上面写了 display:flex 会把它盖掉 */
+    &[hidden] {
+      display: none;
+    }
+
+    svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    @include hover-only {
+      &:hover {
+        background-color: var(--bg-hover);
+      }
+    }
+
+    @include pressed {
+      transform: scale(0.9);
+      transition-duration: var(--dur-press);
+      transition-timing-function: var(--ease-press-in);
+    }
+  }
+
+  &-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text1);
+  }
+
+  /* 层级视窗。overflow: hidden 是横移的前提 —— 不裁切的话相邻层会露在两边。 */
+  &-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* 所有层级横向排开，靠 translateX 切换。
+     track 的高度 = 最高的一层，于是抽屉在层级之间不会忽高忽低。 */
+  &-track {
+    display: flex;
+    height: 100%;
+    transition: transform var(--dur-sheet) var(--ease-emphasized);
+  }
+
+  &-level {
+    flex: 0 0 100%;
+    min-width: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  /* 搜索框。原来是独立的 .sidebar-header，现在收进第一层里 ——
+     它是根级的动作，钻到子级时不该继续占着标题栏。 */
+  &-search {
+    display: flex;
+    height: 48px;
+    flex-direction: row;
+    align-items: center;
+    margin-bottom: var(--space-3);
+
+    input[type="text"] {
         color: var(--text1);
         width: 100%;
         height: 100%;
         border: 1px solid transparent;
-        padding: 5px 20px;
-        border-radius: 25px 0 0 25px;
+        padding: 5px var(--space-5);
+        border-radius: var(--radius-full) 0 0 var(--radius-full);
         line-height: inherit;
-        background-color: var(--card2);
-        transition: border 0.2s linear;
+        background-color: var(--surface-2);
+        outline: none;
+        transition: border-color var(--dur-state) var(--ease-standard),
+          background-color var(--dur-state) var(--ease-standard);
 
         &:focus {
-          outline: none;
-          border: 1px solid var(--theme-9);
+          background-color: var(--surface-1);
+          border-color: var(--theme-6);
         }
 
         &::placeholder {
-          color: inherit;
+          color: var(--text3);
         }
       }
 
       button[type="submit"] {
         height: 100%;
         border: none;
-        background-color: var(--theme-9);
-        color: #fff;
-        border-radius: 0 25px 25px 0;
-        padding: 0 10px;
-      }
-    }
-  }
-
-  &-content {
-    @include card();
-    padding: 10px 20px;
-
-    // 侧边栏项目公共属性
-    .sidebar-list {
-      list-style: none;
-      position: relative;
-
-      // 对于子菜单的ul
-      ul.sidebar-list {
-        border-left: 2px solid #adb5bd;
-        margin-left: 10px;
-        padding-left: 10px;
-
-        // 动画相关
-        height: 0;
-        transition-property: height;
-        transition-duration: 0.4s;
-        transition-timing-function: ease-in-out;
-        transition-delay: 0s;
-        overflow-y: hidden;
-        scrollbar-width: none;
-      }
-
-      // 对于不可展开的li项目
-      li {
-        position: relative;
+        /* 实心面走 --primary-solid + --on-primary，不用写死的 #fff：
+           12 套主题里有三档（yellow / lime / green）必须配深色文字 */
+        background-color: var(--primary-solid);
+        color: var(--on-primary);
+        border-radius: 0 var(--radius-full) var(--radius-full) 0;
+        padding: 0 var(--space-4);
         cursor: pointer;
+        position: relative;
 
-        a {
-          color: inherit;
+        @include state-layer;
+
+        @include pressed {
+          transform: scale(0.96);
+          transition: transform var(--dur-press) var(--ease-press-in);
         }
       }
+  }
 
-      // 对于可展开的li分类项目
-      li.toggle-icon[open] {
+  &-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
-        // 当li分类项目展开时,对应的“<”会旋转
-        &::after {
-          transform: rotate(135deg);
+    /* 子级不在本级展开 —— 它只是钻取时的数据源，会被复制成新的一层。
+       这一条同时干掉了原先 toggleSubmenuHeight 那套 px→auto 的高度交还 hack。 */
+    .sidebar-list {
+      display: none;
+    }
+
+    li {
+      display: flex;
+      align-items: center;
+
+      /* 整行可点。min-height 52px 是安卓列表的常规行高 */
+      a {
+        flex: 1 1 auto;
+        min-width: 0;
+        color: var(--text1);
+        display: flex;
+        align-items: center;
+        min-height: 52px;
+        padding: 0 var(--space-3);
+        border-radius: var(--radius-sm);
+        font-size: 1.0625rem;
+        transition: background-color var(--dur-state) var(--ease-standard),
+          color var(--dur-state) var(--ease-standard);
+
+        @include hover-only {
+          &:hover {
+            color: var(--link);
+            background-color: var(--bg-hover);
+          }
+        }
+
+        // 整行是块状元素，按按压缩放会让行宽缩水，改用透明度表示按下
+        @include pressed {
+          opacity: 0.65;
         }
       }
+    }
+  }
 
-      // 一个“<”
-      .toggle-icon::after {
-        content: " ";
-        position: absolute;
-        top: 13px;
-        right: 5px;
-        width: 5px;
-        height: 5px;
-        border: var(--black) solid;
-        border-width: 2px 2px 0 0;
-        transform: rotate(225deg);
-        transition: transform 0.2s linear;
+  /* 钻取箭头。刻意做成独立按钮而不是整行的点击区 ——
+     「点名字跳转」与「点箭头下钻」是两个意图，分开才不会出现「想展开却跳走了」。
+     44×44 是触摸目标的下限。 */
+  &-more {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: none;
+    border-radius: var(--radius-full);
+    color: var(--text3);
+    background: none;
+    cursor: pointer;
+    transition: background-color var(--dur-state) var(--ease-standard),
+      color var(--dur-state) var(--ease-standard);
+
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    @include hover-only {
+      &:hover {
+        color: var(--link);
+        background-color: var(--bg-hover);
       }
+    }
+
+    @include pressed {
+      opacity: 0.6;
     }
   }
 }
 
-.sidebar[open] {
-  transform: translateX(0);
-
-  // 当侧边栏打开时，设置背景覆盖，用来给js判断点击，点一下之后就消除背景
-  ~#sidebar-backdrop {
-    opacity: 0.5;
-    visibility: visible;
-  }
+/* 打开态。用类而不是 [open] 属性 —— 设置面板也复用一个「打开」的语义，
+   drawer.js 统一加同一个类，两处不必各记一套。 */
+.sidebar.is-open {
+  transform: none;
+  visibility: visible;
+  /* 进场用 --dur-sheet + 减速曲线（起步快、落点稳）。
+     过渡取的是「变化后」那份计算样式，所以开门用这里的值、关门用上面的值。
+     visibility 的时长为 0：打开瞬间就可聚焦，focus() 才不会落空。 */
+  transition: transform var(--dur-sheet) var(--ease-emphasized),
+    visibility 0s;
 }
 
-#sidebar-backdrop {
-  // 不用display:none，因为它可能会造成transition无法生效的问题
-  visibility: hidden;
-  z-index: var(--z-backdrop);
-  top: 0;
-  left: 0;
-  opacity: 0;
-  width: 100vw;
-  height: 100vh;
+/* ---------- 共享蒙版 ----------
+   导航抽屉与设置抽屉共用这一个，显隐由 drawer.js 的 syncScrim() 统一控制 ——
+   只有「模态的」抽屉开着才显示（宽屏的设置浮层是非模态，不该把整页压暗）。 */
+.scrim {
   position: fixed;
-  background-color: #000;
-  transition: opacity #{$transition-duration} linear,
-  visibility #{$transition-duration} linear;
+  inset: 0;
+  z-index: var(--z-backdrop);
+  // 不用 display:none，它会让过渡直接失效
+  visibility: hidden;
+  opacity: 0;
+  /* 蒙版比对话框遮罩更强：抽屉盖住的内容更多，需要压得更实 */
+  background-color: var(--scrim);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  /* 与抽屉保持同一组时长，否则蒙版和面板会各自收尾，看起来像两个东西在动 */
+  transition: opacity var(--dur-exit) var(--ease-exit),
+    visibility 0s linear var(--dur-exit);
+
+  &.is-visible {
+    visibility: visible;
+    opacity: 1;
+    transition: opacity var(--dur-sheet) var(--ease-emphasized), visibility 0s;
+  }
 }
 
 @keyframes rotateAnimation {

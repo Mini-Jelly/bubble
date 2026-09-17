@@ -26,20 +26,33 @@ if ($defaultFontSizeIndex === false) {
 $showBackToTop = ($this->options->backToTop ?? 'on') === 'on';
 ?>
 <div class="fab-group">
-  <div class="fab-settings">
-    <!-- 触发按钮在前、面板在后：面板在 DOM 里紧跟按钮，Tab 才能从按钮自然进入面板。
-         视觉上面板靠 bottom: calc(100% + 8px) 翻到按钮上方，与 DOM 顺序无关。 -->
-    <button type="button" id="settingsFab" class="fab-btn" aria-expanded="false" aria-controls="settingsPanel"
-      aria-label="个性化设置">
-      <svg aria-hidden="true" focusable="false">
-        <use href="#icon-setting"></use>
+  <button type="button" id="settingsFab" class="fab-btn" aria-expanded="false" aria-controls="settingsPanel"
+    aria-label="个性化设置" data-settings-trigger>
+    <svg aria-hidden="true" focusable="false">
+      <use href="#icon-setting"></use>
+    </svg>
+  </button>
+
+  <?php if ($showBackToTop): ?>
+    <button type="button" id="backToTop" class="fab-btn back-to-top" aria-label="回到顶部">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 4l8 8h-5v8H9v-8H4z" />
       </svg>
     </button>
+  <?php endif; ?>
+</div>
 
-    <!-- 面板自身可能滚动（视口很矮时），必须标记 data-lenis-prevent，
-         否则面板内的滚轮会被平滑滚动接管成「滚动正文」 -->
-    <div id="settingsPanel" class="settings-panel" data-lenis-prevent aria-label="个性化设置">
-      <div class="settings-panel__header">
+<!-- 面板必须放在 .fab-group 之外：.fab-group 是 position: fixed，它自己就形成层叠上下文，
+     内部元素再高的 z-index 也盖不过蒙版 —— 而窄屏时这个面板会变成底部抽屉，必须压在蒙版之上。
+     代价是桌面端的锚定不能再靠 CSS 的 bottom: calc(100% + 8px)，
+     改为按触发按钮的实测位置算（见 settings.js）；顺带解决了「回到顶部被主题设置关掉时
+     按钮整体下移」带来的几何变化。
+     面板自身可能滚动（视口很矮时），必须标记 data-lenis-prevent，
+     否则面板内的滚轮会被平滑滚动接管成「滚动正文」。 -->
+<div id="settingsPanel" class="settings-panel" data-lenis-prevent role="dialog" aria-label="个性化设置">
+  <!-- 拖拽把手。只在窄屏的抽屉形态下出现 -->
+  <div class="settings-panel__handle" aria-hidden="true"></div>
+  <div class="settings-panel__header">
         <span class="settings-panel__title">个性化设置</span>
         <button type="button" id="settingsReset" class="settings-panel__reset">恢复默认</button>
       </div>
@@ -112,14 +125,4 @@ $showBackToTop = ($this->options->backToTop ?? 'on') === 'on';
       </div>
 
       <p class="settings-panel__note">设置只保存在本地浏览器内</p>
-    </div>
-  </div>
-
-  <?php if ($showBackToTop): ?>
-    <button type="button" id="backToTop" class="fab-btn back-to-top" aria-label="回到顶部">
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <path d="M12 4l8 8h-5v8H9v-8H4z" />
-      </svg>
-    </button>
-  <?php endif; ?>
 </div>

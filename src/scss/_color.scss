@@ -1,3 +1,8 @@
+@use "shadow.scss" as *;
+
+/* 本文件只管颜色。圆角 / 间距 / 层级在 _tokens.scss，阴影在 _shadow.scss。
+   判据：值随 color-scheme 或 theme 变化的归这里，不随的归 _tokens.scss。 */
+
 /* Open Color */
 $oc-gray-0: #f8f9fa;
 $oc-gray-1: #f1f3f5;
@@ -11,7 +16,9 @@ $oc-gray-8: #343a40;
 $oc-gray-9: #212529;
 
 /* 亮色 / 暗色两套调色板抽成 mixin，
-   便于同时用于 [color-scheme] 属性选择器和无 JS 时的系统偏好兜底 */
+   便于同时用于 [color-scheme] 属性选择器和无 JS 时的系统偏好兜底。
+   阴影也在这里 @include 进来：它同样按明暗分套，挂在调色板里，
+   上面那段「跟随系统偏好」的兜底就只需要写一遍。 */
 @mixin palette-light {
   color: #{$oc-gray-9};
   --text1: #{$oc-gray-8};
@@ -20,17 +27,55 @@ $oc-gray-9: #212529;
   --disabled-text: #{$oc-gray-5};
   --black: #000;
   --white: #fff;
-  --body: #{$oc-gray-0};
-  --card1: var(--white);
-  --card2: #{$oc-gray-2};
+
+  /* 表面阶梯。--surface-* 是规范名，--body/--card1/--card2 是历史别名 ——
+     旧代码里这两个名字用得很多，改名会让它们一次性全失效，所以保留指向。 */
+  --bg-base: #{$oc-gray-0};
+  --surface-1: #fff;
+  --surface-2: #{$oc-gray-2};
+  --surface-3: #{$oc-gray-3};
+  --body: var(--bg-base);
+  --card1: var(--surface-1);
+  --card2: var(--surface-2);
+
+  /* 凹陷容器（分段控件轨道）。规则：比它所在的表面暗一档。
+     分段控件里未选中的文字压在轨道上，轨道若用 --surface-2，
+     暗色下 --text2 只有 2.46:1，基本读不出来。 */
+  --track: #{$oc-gray-1};
+
   --border: rgb(0 0 0 / 10%);
+  --divider: rgb(0 0 0 / 6%);
   --bg-hover: #{$oc-gray-1};
+
+  /* 悬浮层的材质色。只用于「浮在内容之上」的层（导航、抽屉、对话框、遮罩），
+     内容层一律实心 —— 大面积毛玻璃会持续触发合成，在低端安卓机上掉帧。
+
+     不透明度 80% 而不是 72%：页面顶部时导航背后就是纯白页面底，没有内容可模糊，
+     72% 白压白会让整条导航「消失」。提到 80% 让材质更实一点，代价是通透感略降。 */
+  --material: rgb(255 255 255 / 80%);
+  --scrim: rgb(0 0 0 / 40%);
+
   /* 正文内链 / 标签链接 / 评论表单链接统一走 --link。
      亮色用最深的 theme-9 保证对比度，暗色改用 theme-5（深色底上 theme-9 太暗看不清）。
      注意两者必须成对定义：var() 取不到值时整条 color 声明会失效，链接会退化成继承色 */
   --link: var(--theme-9);
   /* 评论区：#fff9e8 那种淡黄底在深色模式下会变成浅底浅字，必须按模式分别取值 */
   --comment-author-bg: #fff9e8;
+
+  /* 浅底强调容器（Tonal 按钮、徽标底色）与它上面的文字。
+     底色用主题色与表面的混色而不是固定的 --theme-1：12 套主题里 --theme-1 的明度
+     差得很远，yellow 的 --theme-9 压在 yellow 的 --theme-1 上只有 3.0:1。
+     混色保证底色永远是「表面 + 一点点主题色」，文字固定用 --text1，
+     于是 12 套主题、明暗两模式都稳定过 AA，不需要逐主题调值。 */
+  --primary-container: color-mix(in srgb, var(--theme-6) 14%, var(--surface-1));
+  --on-primary-container: var(--text1);
+
+  --success: #37b24d;
+  --warning: #f59f00;
+  --error: #e03131;
+  --info: #1c7ed6;
+
+  @include shadow-light;
 }
 
 @mixin palette-dark {
@@ -41,19 +86,47 @@ $oc-gray-9: #212529;
   --disabled-text: #{$oc-gray-8};
   --black: #fff;
   --white: #000;
-  --body: #{$oc-gray-9};
-  --card1: #{$oc-gray-8};
-  --card2: #{$oc-gray-7};
+
+  --bg-base: #{$oc-gray-9};
+  --surface-1: #{$oc-gray-8};
+  --surface-2: #{$oc-gray-7};
+  --surface-3: #5c636a;
+  --body: var(--bg-base);
+  --card1: var(--surface-1);
+  --card2: var(--surface-2);
+
+  /* 暗色下「凹陷」= 比所在表面更暗，所以取 --bg-base 而不是 --surface-3 */
+  --track: #{$oc-gray-9};
+
   --border: rgb(225 225 225 / 15%);
+  --divider: rgb(225 225 225 / 8%);
   --bg-hover: #{$oc-gray-7};
+
+  --material: rgb(33 37 41 / 80%);
+  --scrim: rgb(0 0 0 / 56%);
+
   --link: var(--theme-5);
   --comment-author-bg: #3f3a2b;
+
+  /* 暗色下混色比例要更高，否则主题色会被深表面吃掉，看不出是哪一档 */
+  --primary-container: color-mix(in srgb, var(--theme-6) 22%, var(--surface-1));
+  --on-primary-container: var(--text1);
+
+  --success: #51cf66;
+  --warning: #fcc419;
+  --error: #ff6b6b;
+  --info: #4dabf7;
+
+  @include shadow-dark;
 }
 
 :root {
-  /* Global */
-  --radius: 6px;
-  --box-shadow: 0 5px 40px -10px rgba(0, 0, 0, 0.2);
+  /* 实心面（承载文字的实心主题色块）与它上面的文字色。
+     --primary 只许用于不承载文字的地方：图标、边框、焦点环、进度条、选中态。
+     实心面必须用 --primary-solid（--theme-9）—— 白字压在 --theme-6 的 blue #228be6 上
+     只有 3.56:1，换成 theme-9 后达 6.09:1。 */
+  --primary: var(--theme-6);
+  --primary-solid: var(--theme-9);
 
   &[color-scheme="light"] {
     @include palette-light;
@@ -62,21 +135,16 @@ $oc-gray-9: #212529;
   &[color-scheme="dark"] {
     @include palette-dark;
   }
-
-  /* 层级集中管理。此前 z-index 分散在 5 个文件里，调整时只能全文搜索，
-     很容易出现「A 以为是 9、实际 B 是 10」这类只能靠猜的调试。
-     fab 组刻意压在蒙版之下：手机端抽屉或设置面板打开时会被蒙版一起盖住。 */
-  --z-fab: 8;
-  --z-backdrop: 10;
-  --z-nav: 10;
-  --z-sidebar: 20;
-  --z-toc: 1000;
 }
 
 /* 主题色调色板。选择器刻意从 :root[theme="x"] 放宽到 [theme="x"]：
-   右下角设置面板要同时展示 12 个色块，解绑 :root 之后，色块只要自己带上
-   theme="x" 就能取到 var(--theme-6)，不必把 12 组色值在别处再抄一遍。
-   全站只有 <html> 与这些色块会写 theme 属性，不存在误伤。 */
+   设置面板要同时展示 12 个色块，解绑 :root 之后，色块只要自己带上
+   theme="x" 就能取到颜色，不必把 12 组色值在别处再抄一遍。
+   全站只有 <html> 与这些色块会写 theme 属性，不存在误伤。
+
+   --on-primary 必须逐主题定义，不能恒为白色：Open Color 的 yellow / lime / green
+   即使取到 900 级也压不住白字，那三档要配深色文字。
+   orange 是已知例外 —— 白字 4.30、深字 3.58，两个方向都够不到 4.5，取白字作相对较优解。 */
 [theme="blue"] {
   --theme-0: #e7f5ff;
   --theme-1: #d0ebff;
@@ -88,6 +156,7 @@ $oc-gray-9: #212529;
   --theme-7: #1c7ed6;
   --theme-8: #1971c2;
   --theme-9: #1864ab;
+  --on-primary: #fff;
 }
 
 [theme="red"] {
@@ -101,6 +170,7 @@ $oc-gray-9: #212529;
   --theme-7: #f03e3e;
   --theme-8: #e03131;
   --theme-9: #c92a2a;
+  --on-primary: #fff;
 }
 
 [theme="pink"] {
@@ -114,6 +184,7 @@ $oc-gray-9: #212529;
   --theme-7: #d6336c;
   --theme-8: #c2255c;
   --theme-9: #a61e4d;
+  --on-primary: #fff;
 }
 
 [theme="grape"] {
@@ -127,6 +198,7 @@ $oc-gray-9: #212529;
   --theme-7: #ae3ec9;
   --theme-8: #9c36b5;
   --theme-9: #862e9c;
+  --on-primary: #fff;
 }
 
 [theme="violet"] {
@@ -140,6 +212,7 @@ $oc-gray-9: #212529;
   --theme-7: #7048e8;
   --theme-8: #6741d9;
   --theme-9: #5f3dc4;
+  --on-primary: #fff;
 }
 
 [theme="indigo"] {
@@ -153,6 +226,7 @@ $oc-gray-9: #212529;
   --theme-7: #4263eb;
   --theme-8: #3b5bdb;
   --theme-9: #364fc7;
+  --on-primary: #fff;
 }
 
 [theme="cyan"] {
@@ -166,6 +240,7 @@ $oc-gray-9: #212529;
   --theme-7: #1098ad;
   --theme-8: #0c8599;
   --theme-9: #0b7285;
+  --on-primary: #fff;
 }
 
 [theme="teal"] {
@@ -179,6 +254,7 @@ $oc-gray-9: #212529;
   --theme-7: #0ca678;
   --theme-8: #099268;
   --theme-9: #087f5b;
+  --on-primary: #fff;
 }
 
 [theme="green"] {
@@ -192,6 +268,7 @@ $oc-gray-9: #212529;
   --theme-7: #37b24d;
   --theme-8: #2f9e44;
   --theme-9: #2b8a3e;
+  --on-primary: #{$oc-gray-9};
 }
 
 [theme="lime"] {
@@ -205,6 +282,7 @@ $oc-gray-9: #212529;
   --theme-7: #74b816;
   --theme-8: #66a80f;
   --theme-9: #5c940d;
+  --on-primary: #{$oc-gray-9};
 }
 
 [theme="yellow"] {
@@ -218,6 +296,7 @@ $oc-gray-9: #212529;
   --theme-7: #f59f00;
   --theme-8: #f08c00;
   --theme-9: #e67700;
+  --on-primary: #{$oc-gray-9};
 }
 
 [theme="orange"] {
@@ -230,11 +309,12 @@ $oc-gray-9: #212529;
   --theme-6: #fd7e14;
   --theme-7: #f76707;
   --theme-8: #e8590c;
-    --theme-9: #d9480f;
+  --theme-9: #d9480f;
+  --on-primary: #fff;
 }
 
 /* 兜底：JS 被禁用或执行出错时 html 上不会有 color-scheme 属性，
-   此时若不做处理，--text1 / --body / --card1 等变量全部未定义，整站失去配色 */
+   此时若不做处理，--text1 / --bg-base / --surface-1 等变量全部未定义，整站失去配色 */
 @media (prefers-color-scheme: light) {
   :root:not([color-scheme]) {
     @include palette-light;
@@ -246,15 +326,3 @@ $oc-gray-9: #212529;
     @include palette-dark;
   }
 }
-
-/* Open Color Style */
-// --oc-gray-0: #f8f9fa;
-// --oc-gray-1: #f1f3f5;
-// --oc-gray-2: #e9ecef;
-// --oc-gray-3: #dee2e6;
-// --oc-gray-4: #ced4da;
-// --oc-gray-5: #adb5bd; //additional explanations below headlines or metadata,appropriate to indicate disabled forms, buttons and links
-// --oc-gray-6: #868e96; //It is useful for text which isn’t as important as others
-// --oc-gray-7: #495057; //The soft color of Gray 7 naturally matches with a background.
-// --oc-gray-8: #343a40; //Make a clearly readable text.
-// --oc-gray-9: #212529;

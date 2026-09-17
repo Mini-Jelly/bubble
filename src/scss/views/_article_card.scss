@@ -1,11 +1,67 @@
+@use "../motion.scss" as *;
+
 .article-card {
   position: relative;
   display: flex;
-  background-color: var(--card1);
-  padding: 1rem;
-  margin: 1rem 0;
-  border-radius: var(--radius);
-  box-shadow: var(--box-shadow);
+  background-color: var(--surface-1);
+  padding: var(--space-4);
+  margin: var(--space-4) 0;
+  /* 卡片默认用 --shadow-sm 而不是 --shadow-md：列表里十几张卡片同时用大阴影，
+     页面会显得「浮」，层次反而消失。--shadow-md 留给悬停态。 */
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow var(--dur-state) var(--ease-standard),
+    transform var(--dur-release) var(--ease-spring);
+
+  /* 悬停抬升。用 transform + 阴影而不是 border ——
+     加 border 会改变盒子尺寸，悬停瞬间整列卡片跟着抖一下 */
+  @include hover-only {
+    &:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(var(--lift));
+    }
+  }
+
+  /* 悬停时的主题色环。为什么不用 box-shadow 直接写在卡片上：
+     CSS 插值 box-shadow 列表是按「位置」配对的 —— 悬停态 [环, 海拔1, 海拔2] 有三个、
+     静止态只有两个，浏览器把短的用 0 0 0 0 transparent 补齐后逐个插值，
+     第一个环会被插值成第一个海拔阴影。于是退出时环不是原地淡出，
+     而是「收缩 + 模糊 + 变色」地融进卡片阴影里，深色底上非常明显。
+     （还原前那版代码把 box-shadow 注释掉改用 outline，就是这个原因。）
+
+     交给伪元素承载后，环的几何永远是满尺寸的，只动 opacity ——
+     原地淡入淡出，不参与任何位置插值，和海拔阴影彻底解耦。
+     也不用 outline：那条通道留给 :focus-visible，且 outline 从 0px 长到 2px
+     会看到宽度生长。 */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 0 2px var(--theme-6);
+    opacity: 0;
+    /* 环只负责「指针在这里」，不接收点击，否则会盖住卡片内的链接 */
+    pointer-events: none;
+    transition: opacity var(--dur-state) var(--ease-standard);
+  }
+
+  @include hover-only {
+    &:hover::after {
+      opacity: 1;
+    }
+  }
+
+  /* 按压态由 press_feedback.js 加在卡片上 —— 它只在「按在卡片内的链接上」时才把整张
+     卡片当作按压目标，按在摘要文字上不触发，否则拖选文字也会让卡片缩一下。
+     :has(a:active) 保留作无 JS 时的兜底。
+     时长用 --dur-press 而非 --dur-media：后者是封面图放大的时长，用它会让快速点击
+     只走完一小截行程 */
+  &:has(a:active),
+  &.is-pressed,
+  &.is-pending {
+    transform: scale(var(--press-scale));
+    transition: transform var(--dur-press) var(--ease-press-in);
+  }
 
   &-image {
     align-self: center;
@@ -19,12 +75,24 @@
       position: relative;
       width: 266px;
       height: 169px;
+      /* 封面圆角比卡片大一档（20 vs 16），图片才有「被嵌进卡片」的观感。
+         overflow: hidden 必须加在 a 上而不是只给 img 加圆角 ——
+         img 放大后自己的圆角会被裁到框外，四角会变成直角 */
+      border-radius: var(--radius-lg);
+      overflow: hidden;
 
       img {
         object-fit: cover;
         width: 100%;
         height: 100%;
-        border-radius: var(--radius);
+        border-radius: var(--radius-lg);
+        transition: transform var(--dur-media) var(--ease-standard);
+      }
+
+      @include hover-only {
+        &:hover img {
+          transform: scale(1.04);
+        }
       }
     }
 
@@ -36,13 +104,15 @@
       width: 100%;
       height: 100%;
       position: absolute;
-      border-radius: var(--radius);
-      background-color: rgba(0, 0, 0, 0.1);
+      border-radius: var(--radius-lg);
+      background-color: var(--surface-2);
 
       &::after {
         font-size: 1.5rem;
         content: "No Image"; //无图片
-        color: #999;
+        /* --text3 只用于非文字元素；这里虽是文字但属装饰性占位，
+           压在 --surface-2 上，浅色 3.3:1 / 暗色 2.5:1 —— 可读但不抢眼 */
+        color: var(--text2);
         position: absolute;
         top: 50%;
         left: 50%;
@@ -53,7 +123,7 @@
 
   &-info {
     display: flex;
-    padding-left: 10px;
+    padding-left: var(--space-4);
     flex-direction: column;
     justify-content: space-evenly;
 
@@ -67,6 +137,7 @@
 
         a {
           color: inherit;
+          transition: color var(--dur-state) var(--ease-standard);
 
           &:visited {
             color: inherit;
@@ -96,19 +167,56 @@
 
       a {
         color: var(--link);
+        transition: color var(--dur-state) var(--ease-standard);
+
+        @include hover-only {
+          &:hover {
+            color: var(--theme-5);
+          }
+        }
       }
+    }
+  }
+
+  /* 标题转主题色。必须写在这里而不是 &-header 内部 —— 要压过同特异性的
+     a:visited 规则，只能靠「更靠后」 */
+  @include hover-only {
+    &:hover .article-card-info-header h2 a {
+      color: var(--theme-6);
     }
   }
 }
 
+/* 窄屏把封面从「图左文右」改成「上置 16:9」。
+   原先是直接 display: none 把封面砍掉 —— 但博客的封面本身就是内容的一部分，
+   手机上直接消失等于每篇都退化成纯文字。改上置后信息量不变，只是重排。 */
 @media (max-width: 576px) {
   .article-card {
+    flex-direction: column;
+
     &-image {
-      display: none;
+      display: block;
+      width: 100%;
+
+      a {
+        width: 100%;
+        // 16:9 用 padding-top 撑高：a 是块级元素，高度写百分比取不到参照
+        height: 0;
+        padding-bottom: 56.25%;
+      }
+
+      img,
+      .no-image {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
     }
 
     &-info {
       padding-left: 0;
+      padding-top: var(--space-4);
     }
   }
 }

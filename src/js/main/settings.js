@@ -1,4 +1,5 @@
 import { getById, setHtml } from './global.js';
+import { createDrawer } from './drawer.js';
 
 /**
   * 访客级个性化设置（右下角悬浮面板）
@@ -60,9 +61,11 @@ function clearStored(key) {
 }
 
 class SettingsPanel {
-  constructor(panel, trigger) {
+  constructor(panel) {
     this.panel = panel;
-    this.trigger = trigger;
+    // 两个入口共用同一个面板：手机端在导航右上角，桌面端在右下角 FAB 组里。
+    // 同一时刻只有一个可见（CSS 按断点切换），但 aria-expanded 必须两个都更新。
+    this.triggers = Array.from(document.querySelectorAll('[data-settings-trigger]'));
     this.resetBtn = getById('settingsReset');
     // key -> { el, type, values, labels, default, valueEl, current }
     this.fields = new Map();
@@ -346,39 +349,57 @@ class SettingsPanel {
   }
 
   bindTrigger() {
-    const setOpen = (open, restoreFocus = false) => {
-      this.panel.classList.toggle('is-open', open);
-      this.trigger.setAttribute('aria-expanded', String(open));
-      if (!open && restoreFocus) this.trigger.focus();
+    if (this.triggers.length === 0) return;
+
+    /* 锚定。面板刻意放在 .fab-group 之外（原因见 views/fab.php 的注释），
+       所以宽屏浮层拿不到 CSS 的相对定位，只能按触发按钮的实测位置算。
+       这顺带解决了「回到顶部被主题设置关掉时按钮整体下移」的几何变化。 */
+    const syncAnchor = () => {
+      // 取当前可见的那个：两个入口按断点切换，隐藏的那个量出来是 0
+      const from = this.triggers.find((t) => t.offsetParent !== null);
+      if (!from) return;
+      const rect = from.getBoundingClientRect();
+      this.panel.style.setProperty(
+        '--panel-anchor-right',
+        `${Math.round(window.innerWidth - rect.right)}px`
+      );
+      this.panel.style.setProperty(
+        '--panel-anchor-bottom',
+        `${Math.round(window.innerHeight - rect.top + 8)}px`
+      );
     };
 
-    this.trigger.addEventListener('click', (event) => {
-      // 不冒泡：否则 document 上的「点外部关闭」会立刻又把它关掉
-      event.stopPropagation();
-      setOpen(!this.panel.classList.contains('is-open'));
+    /* 窄屏走抽屉控制器：模态、有蒙版、焦点环、拖拽关闭；
+       宽屏保持普通浮层：非模态，点外部关闭。
+       modal 传函数而不是布尔值，每次实时求值 —— 断点切换后行为立刻跟着变。 */
+    this.drawer = createDrawer({
+      root: this.panel,
+      triggers: this.triggers,
+      scrim: getById('drawerScrim'),
+      handle: this.panel.querySelector('.settings-panel__handle'),
+      modal: () => window.matchMedia('(max-width: 833px)').matches,
+      onOpen: syncAnchor,
     });
 
-    // 面板内部的点击同样不冒泡，否则点一下控件面板就被关掉
+    window.addEventListener('resize', () => {
+      if (this.drawer.isOpen()) syncAnchor();
+    });
+
+    // 面板内部的点击不冒泡，否则宽屏下点一下控件就被「点外部关闭」关掉
     this.panel.addEventListener('click', (event) => event.stopPropagation());
 
     document.addEventListener('click', () => {
-      if (this.panel.classList.contains('is-open')) setOpen(false);
-    });
-
-    document.addEventListener('keydown', (event) => {
-      // Esc 关闭并把焦点还给触发按钮，键盘用户不会「丢失」焦点
-      if (event.key === 'Escape' && this.panel.classList.contains('is-open')) {
-        setOpen(false, true);
-      }
+      // 窄屏是模态抽屉，关闭走蒙版点击；这里只管宽屏的浮层
+      if (this.drawer.isOpen() && !this.drawer.isModal()) this.drawer.close();
     });
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const panel = getById('settingsPanel');
-  const trigger = getById('settingsFab');
-  // 主题设置里关掉回到顶部也不影响设置面板；两个元素缺一就不初始化
-  if (!panel || !trigger) return;
+  // 触发按钮有多个（手机端在导航右上、桌面端在右下 FAB），由实例自己去收集；
+  // 面板缺失才需要中断 —— 控件同步本身是独立于入口的
+  if (!panel) return;
 
-  new SettingsPanel(panel, trigger);
+  new SettingsPanel(panel);
 });

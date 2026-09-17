@@ -1,57 +1,84 @@
+@use "../motion.scss" as *;
+
 .comment {
-  margin: 1rem auto;
-  padding: 1.5rem;
-  border-radius: var(--radius);
-  box-shadow: var(--box-shadow);
-  background-color: var(--card1);
+  margin: var(--space-4) auto;
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  background-color: var(--surface-1);
 
   &-form {
-    a{
+    a {
       color: var(--link);
-    } 
+    }
 
     textarea,
     input {
+      /* outline: 0 是有意保留的 —— 焦点提示改由下面的 border-color + 光环承担，
+         两者都在 :focus 里给，键盘用户不会失去可见焦点 */
       outline: 0;
       color: var(--text1);
-      border-radius: var(--radius);
-      background-color: var(--card2);
-      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background-color: var(--surface-2);
+      border: 1px solid transparent;
+      transition: background-color var(--dur-state) var(--ease-standard),
+        border-color var(--dur-state) var(--ease-standard),
+        box-shadow var(--dur-state) var(--ease-standard);
+
       &:focus {
-        border-color: var(--theme-8);
+        background-color: var(--surface-1);
+        border-color: var(--theme-6);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-6) 18%, transparent);
       }
+
       &::placeholder {
-        color: inherit;
+        color: var(--text3);
       }
     }
+
     textarea {
-      margin: 0.5rem 0;
+      margin: var(--space-2) 0;
       width: 100%;
-      padding: 1rem;
+      padding: var(--space-4);
       min-width: 100%;
       min-height: 100px;
       max-width: 100%;
       max-height: 500px;
     }
+
     input {
       width: 100%;
-      padding: 10px 15px;
+      padding: 10px var(--space-4);
     }
 
     button.submit {
       cursor: pointer;
-      padding: 10px;
-      color: #fff;
-      border-radius: var(--radius);
-      background-color: var(--theme-9);
-      border: 1px solid var(--border);
+      /* 48px 高、胶囊形：这是整页最需要被点到的按钮，尺寸不该省 */
+      min-height: 48px;
+      padding: 10px var(--space-6);
+      /* 实心面走 --primary-solid + --on-primary，不用写死的 #fff：
+         12 套主题里有三档（yellow / lime / green）必须配深色文字 */
+      color: var(--on-primary);
+      border-radius: var(--radius-full);
+      background-color: var(--primary-solid);
+      border: 1px solid transparent;
+      font-family: inherit;
+      font-size: 1rem;
+      position: relative;
+
+      @include state-layer;
+
+      @include pressed {
+        transform: scale(0.96);
+        transition: transform var(--dur-press) var(--ease-press-in);
+      }
     }
 
     .input-group {
       display: flex;
       flex-direction: row;
       align-items: center;
-      margin-bottom: 0.5rem;
+      margin-bottom: var(--space-2);
 
       &-wrap {
         display: flex;
@@ -65,7 +92,7 @@
       }
 
       div + div {
-        margin-left: 1rem;
+        margin-left: var(--space-4);
       }
     }
   }
@@ -79,19 +106,19 @@
 
   &-list {
     li {
-      margin: 10px 0;
-      padding: 14px;
+      margin: var(--space-3) 0;
+      padding: var(--space-4);
       // 原先是硬编码 #eee / #f6f6f3 / #fff / #fff9e8 / #444 / #999，
       // 深色模式下浅底浅字几乎不可读，统一换成随 color-scheme 变化的变量
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--radius-md);
 
       .comment-level-odd {
         background: var(--bg-hover);
       }
 
       .comment-level-even {
-        background: var(--card1);
+        background: var(--surface-1);
       }
 
       .comment-by-author {
@@ -105,8 +132,8 @@
     }
 
     .respond {
-      margin-top: 15px;
-      border-top: 1px solid var(--border);
+      margin-top: var(--space-4);
+      border-top: 1px solid var(--divider);
     }
   }
 
@@ -114,6 +141,13 @@
     a {
       color: var(--text2);
       font-size: 0.9rem;
+      transition: color var(--dur-state) var(--ease-standard);
+
+      @include hover-only {
+        &:hover {
+          color: var(--link);
+        }
+      }
     }
   }
 
@@ -144,9 +178,10 @@
   .comment-form {
     .input-group {
       flex-direction: column;
+
       div + div {
         margin-left: 0;
-        margin-top: 0.5rem;
+        margin-top: var(--space-2);
       }
     }
   }

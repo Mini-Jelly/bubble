@@ -3,6 +3,7 @@
 /.idea/
 /.workbuddy/
 /docs/
+/.ignore/
 /package-lock.json
 
 # 构建产物备份、审查临时文件、打包中间产物 —— 都不是主题包内容

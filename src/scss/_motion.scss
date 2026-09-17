@@ -1,0 +1,187 @@
+/* 动效令牌与通用交互状态。
+   与 :root 的 --z-* 同一思路：集中定义，改一处全站生效。
+   新增动效一律引用这里的令牌，不要再写死时长与曲线。 */
+
+/* 只在支持悬停的设备上启用 hover 分支。
+   触摸设备没有真正的悬停，点完会一直停在 hover 态，看起来像卡住了。 */
+@mixin hover-only {
+  @media (hover: hover) {
+    @content;
+  }
+}
+
+/* 按压态。
+   .is-pressed 由 src/js/main/press_feedback.js 添加 —— 它保证轻点也能走完按下行程。
+   为什么不能只用 :active：它的寿命由浏览器按真实指针状态决定，快速点击只有几十毫秒，
+   CSS 没有任何手段能延长（transition-delay 只能延后开始，无法补完被打断的过渡）。
+   .is-pending 是导航型链接专用的保持态：松手后页面即将卸载，弹起物理上播不完，
+   于是保持按下直到卸载。:active 保留作无 JS 或脚本未就绪时的兜底。 */
+@mixin pressed {
+  &:active,
+  &.is-pressed,
+  &.is-pending {
+    @content;
+  }
+}
+
+/* 块状可点面（卡片、按钮、标签、分页）的过渡与按压。
+   悬停态交给调用方：各组件悬停表现差异太大，不适合统一。
+   按下走 --dur-press + --ease-press-in（无过冲），松手走 --dur-release + --ease-spring 回弹。 */
+@mixin pressable {
+  transition:
+    transform var(--dur-release) var(--ease-spring),
+    background-color var(--dur-state) var(--ease-standard),
+    color var(--dur-state) var(--ease-standard),
+    border-color var(--dur-state) var(--ease-standard),
+    box-shadow var(--dur-state) var(--ease-standard),
+    opacity var(--dur-state) var(--ease-standard);
+
+  @include pressed {
+    transform: scale(var(--press-scale));
+    transition-duration: var(--dur-press);
+    transition-timing-function: var(--ease-press-in);
+  }
+}
+
+/* 行内文字链接。刻意不缩放 —— 行内元素缩放会让字形在段落里变形并挤压行高，
+   看起来像渲染故障。改用「下划线从透明淡入 + 颜色过渡」，
+   下划线空间始终预留，悬停时不会产生任何位移。 */
+@mixin link-feedback {
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+  transition:
+    color var(--dur-state) var(--ease-standard),
+    text-decoration-color var(--dur-state) var(--ease-standard),
+    opacity var(--dur-press) linear;
+
+  @include hover-only {
+    &:hover {
+      text-decoration-color: currentColor;
+    }
+  }
+
+  @include pressed {
+    opacity: 0.6;
+  }
+}
+
+/* 实心面上的状态层（Material 3 state layer）。
+   为什么不用「悬停换一档主题色」：12 套主题里深色主题该往亮走、浅色主题该往暗走，
+   换色阶必然在某一档翻车（黄底白字、蓝底白字无法共用同一个方向）。
+   叠加一层与文字同色的半透明则与主题无关，也不改变原有的对比度关系。
+   调用方需自备 position: relative 与可继承的 border-radius。 */
+@mixin state-layer {
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background-color: var(--on-primary);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-state) var(--ease-standard);
+  }
+
+  @include hover-only {
+    &:hover::after {
+      opacity: 0.08;
+    }
+  }
+
+  &:active::after,
+  &.is-pressed::after {
+    opacity: 0.12;
+  }
+}
+
+:root {
+  /* 缓动曲线。standard 用于颜色 / 背景 / 透明度；
+     spring 带轻微过冲，用于缩放回弹，这是「有生命感」与「生硬」的分水岭 */
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.34, 1.78, 0.64, 1);
+  --ease-out: ease-out;
+  /* 按下专用，必须无过冲：按下若用 --ease-spring，会先冲过目标再弹回来，
+     一次按压被拆成两段运动 */
+  --ease-press-in: var(--ease-out);
+  /* 面板 / 抽屉的进场用减速曲线（起步快、落点稳），出场用加速曲线。
+     出场必须比入场快，否则关闭一个面板会显得拖沓。 */
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  /* 时长。按下这一段可以放心长于最快的点击 —— press_feedback.js 会保证它走完，
+     不像纯 CSS 那样被中断在半途。--press-dwell 是到位后的停留，
+     让极快的点击也能被眼睛捕捉到。 */
+  --dur-press: 120ms;
+  --press-dwell: 60ms;
+  --dur-release: 280ms;
+  --dur-state: 180ms;
+  --dur-media: 420ms;
+  --dur-enter: 220ms;
+  --dur-exit: 140ms;
+  --dur-sheet: 300ms;
+  /* 跨文档转场。由浏览器接管，这个值只作为 ::view-transition-* 的 animation-duration */
+  --dur-nav: 240ms;
+
+  /* 位移量。--lift 用 -4px 而不是 -2px：1440px 视口下 2px 只有视高的 0.14%，
+     肉眼基本无感，悬停等于没反馈 */
+  --press-scale: 0.9;
+  --lift: -4px;
+
+  /* 焦点环颜色。深色底与主题色底上必须覆盖（见下方），
+     否则环与背景同色，等于没有焦点提示 */
+  --focus-ring: var(--link);
+}
+
+/* 实心主题色底上的焦点环。用 --on-primary 而不是写死的 #fff ——
+   实心面的底色是 --primary-solid（= --theme-9），亮色下 --link 也等于 --theme-9，
+   不覆盖就同色不可见；而 12 套主题里有三档（yellow / lime / green）配的是深色文字，
+   白环压在它们上面同样不可见。
+   用自定义属性做级联覆盖，容器上写一次，后代自动继承。
+   注意不要整个 .sidebar 一起覆盖 —— 抽屉的底色是 --surface-1，浅色下白环会看不见。
+   导航栏也不在此列：它现在是浅色毛玻璃，默认的 --link 焦点环已经够显眼。 */
+.sidebar form button[type="submit"],
+.comment-form button.submit,
+.page-navigator .current a,
+.post-toc-item a.active,
+.fab-btn[aria-expanded="true"] {
+  --focus-ring: var(--on-primary);
+}
+
+/* 全站焦点环。:where() 保持零特异性，组件随时可以覆盖；
+   只在键盘操作时出现，鼠标点击不会留下焦点框。 */
+:where(a, button, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* 移动端点击时浏览器会盖一层灰色方块，与自定义反馈打架，观感也廉价 */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 减少动态效果：用令牌统一关断，不必逐个选择器去关。
+   --press-scale 一并归 1 —— 时长归零后残留的缩放会变成单帧跳变，看着像故障。
+   这里同时把 --press-dwell 归零，press_feedback.js 读到的「最小保持时长」也随之归零。 */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-press: 0.01ms;
+    --press-dwell: 0.01ms;
+    --dur-release: 0.01ms;
+    --dur-state: 0.01ms;
+    --dur-media: 0.01ms;
+    --dur-enter: 0.01ms;
+    --dur-exit: 0.01ms;
+    --dur-sheet: 0.01ms;
+    --dur-nav: 0.01ms;
+    --press-scale: 1;
+  }
+
+  /* View Transitions 的伪元素不在普通选择器的作用域里，
+     拿不到上面那组令牌，必须单独关掉。 */
+  ::view-transition-group(*),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+}

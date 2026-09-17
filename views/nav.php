@@ -20,10 +20,22 @@
   </symbol>
 </svg>
 <nav id="nav" class="nav">
-  <!-- 手机端侧边栏按钮 -->
-  <button id="sidebarOutBtn" type="button" aria-label="打开侧边栏" aria-controls="sidebar" aria-expanded="false">
-    <svg width="36" height="36" fill="#ffffff" aria-hidden="true">
+  <!-- 手机端底部抽屉的触发按钮 -->
+  <button id="sidebarOutBtn" type="button" aria-label="打开导航" aria-controls="sidebar" aria-expanded="false">
+    <!-- fill 走 currentColor：导航底色现在随明暗模式变化，写死 #fff 在浅色下会消失 -->
+    <svg width="24" height="24" fill="currentColor" aria-hidden="true">
       <use href="#icon-menu"></use>
+    </svg>
+  </button>
+  <?php
+  /* 个性化设置的入口。只在手机端出现，与左侧的抽屉按钮对称 ——
+     桌面端导航已经有搜索框和分类，塞不下，设置仍留在右下角的 FAB 组里。
+     两个入口共用同一个面板（#settingsPanel），由 drawer.js 统一管开合与状态同步。 */
+  ?>
+  <button id="settingsNavBtn" class="nav-icon-btn" type="button" aria-label="个性化设置"
+    aria-controls="settingsPanel" aria-expanded="false" data-settings-trigger>
+    <svg width="24" height="24" fill="currentColor" aria-hidden="true">
+      <use href="#icon-setting"></use>
     </svg>
   </button>
   <!-- LOGO -->
@@ -37,19 +49,27 @@
   <!-- 搜索框 -->
   <form class="nav-form" method="post" action="<?php $this->options->siteUrl(); ?>" role="search">
     <button id="nav-form-submit" class="nav-form-submit" aria-label="Submit" type="submit">
-      <svg width="16" height="16" fill="#fff">
+      <svg width="16" height="16" fill="currentColor">
         <use href="#icon-search"></use>
       </svg>
     </button>
     <input name="s" class="nav-form-input" id="nav-form-input" placeholder="搜索" autocomplete="off" type="text" aria-label="Search">
     <button id="nav-form-clean" class="nav-form-clean" type="button" aria-label="Clear">
-      <svg width="16" height="16" fill="#fff">
+      <svg width="16" height="16" fill="currentColor">
         <use href="#icon-clean"></use>
       </svg>
     </button>
   </form>
   <!-- 分类 -->
   <div class="nav-category">
+    <?php
+    // 「首页」不属于任何分类，走不了 listCategories，只能自己输出一项。
+    // 它的当前态由 PHP 直接判定，首屏就带着指示条，不会有「先渲染再补上」的闪烁；
+    // 分类项的当前态交给 JS 比对 URL（见 src/js/main/nav.js）——
+    // 在 listCategories 的解析模板里拿不到稳定的归档上下文。
+    ?>
+    <a class="nav-link<?= $this->is('index') ? ' is-current' : '' ?>"
+      href="<?php $this->options->siteUrl(); ?>">首页</a>
     <?php $this->widget('Widget_Metas_Category_List')->listCategories('wrapClass=category-list'); ?>
   </div>
   <?php
@@ -82,41 +102,65 @@
   // 才不会踩到「符号尚未定义」。
   ?>
 </nav>
-<!-- 手机端侧边栏 -->
-<div id="sidebar" class="sidebar" data-lenis-prevent>
+<!-- 手机端底部抽屉。
+     刻意做成 role="dialog" + aria-modal：它盖住整页内容并锁住背景，
+     对屏幕阅读器来说就是一个模态对话框，不是一个「补充区域」。 -->
+<div id="sidebar" class="sidebar" data-lenis-prevent role="dialog" aria-modal="true" aria-label="站点导航">
+  <!-- 拖拽把手。纯视觉暗示，语义上无内容，故 aria-hidden -->
+  <div class="sidebar-handle" aria-hidden="true"></div>
+
+  <!-- 钻取导航的标题栏。层级切换时只有下面的 track 在横移，这一行与把手保持不动 ——
+       整个抽屉一起滑会被读成「抽屉在换」，而不是「我在往下一层走」 -->
   <div class="sidebar-header">
-    <form id="search" method="post" action="<?= $this->options->siteUrl(); ?>" role="search">
-      <input type="text" id="s" name="s" class="text" placeholder="输入关键字搜索" />
-      <button type="submit" class="submit">Search</button>
-    </form>
+    <button type="button" class="sidebar-back" aria-label="返回上一级" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path
+          d="M14.7 5.3a1 1 0 0 1 0 1.4L9.4 12l5.3 5.3a1 1 0 0 1-1.4 1.4l-6-6a1 1 0 0 1 0-1.4l6-6a1 1 0 0 1 1.4 0z" />
+      </svg>
+    </button>
+    <span class="sidebar-title" data-role="title">导航</span>
   </div>
-  <div class="sidebar-content">
-    <?php $this->widget('Widget_Metas_Category_List')->listCategories('wrapClass=sidebar-list'); ?>
-    <ul class="sidebar-list">
-      <li class="category-parent">
-        <a href="#">独立页面</a>
+
+  <div class="sidebar-body">
+    <!-- 每一层是一个等宽的 panel，整体横向平移切换。
+         子级不在本级展开，而是被复制成新的一层 —— 展开式的手风琴在 80vh 高的抽屉里
+         必然会溢出（基础列表 8 行 + 一个 7 项的展开组就超了），只能滚。 -->
+    <div class="sidebar-track" data-role="track">
+      <div class="sidebar-level" data-role="level">
+        <form id="search" class="sidebar-search" method="post" action="<?= $this->options->siteUrl(); ?>"
+          role="search">
+          <input type="text" id="s" name="s" class="text" placeholder="输入关键字搜索" />
+          <button type="submit" class="submit">Search</button>
+        </form>
+        <?php $this->widget('Widget_Metas_Category_List')->listCategories('wrapClass=sidebar-list'); ?>
         <ul class="sidebar-list">
-          <!-- <a> 上不存在 alt 属性，描述性文本应该放在 title 上 -->
-          <?php $pages = Typecho_Widget::widget('Widget_Contents_Page_List')->to($page);
-          while ($page->next()): ?>
-            <li>
-              <a href="<?= htmlspecialchars($pages->permalink, ENT_QUOTES, 'UTF-8') ?>"
-                title="<?= htmlspecialchars($pages->title, ENT_QUOTES, 'UTF-8') ?>"><?php $pages->title(); ?></a>
-            </li>
-          <?php endwhile; ?>
+          <li class="category-parent">
+            <a href="#">独立页面</a>
+            <ul class="sidebar-list">
+              <!-- <a> 上不存在 alt 属性，描述性文本应该放在 title 上 -->
+              <?php $pages = Typecho_Widget::widget('Widget_Contents_Page_List')->to($page);
+              while ($page->next()): ?>
+                <li>
+                  <a href="<?= htmlspecialchars($pages->permalink, ENT_QUOTES, 'UTF-8') ?>"
+                    title="<?= htmlspecialchars($pages->title, ENT_QUOTES, 'UTF-8') ?>"><?php $pages->title(); ?></a>
+                </li>
+              <?php endwhile; ?>
+            </ul>
+          </li>
         </ul>
-      </li>
-    </ul>
-    <ul class="sidebar-list">
-      <li class="category-parent">
-        <a href="#">归档</a>
         <ul class="sidebar-list">
-          <?php \Widget\Contents\Post\Date::alloc('type=year&format=Y')
-            ->parse('<li><a href="{permalink}">{date}年</a></li>'); ?>
+          <li class="category-parent">
+            <a href="#">归档</a>
+            <ul class="sidebar-list">
+              <?php \Widget\Contents\Post\Date::alloc('type=year&format=Y')
+                ->parse('<li><a href="{permalink}">{date}年</a></li>'); ?>
+            </ul>
+          </li>
         </ul>
-      </li>
-    </ul>
+      </div>
+      <!-- 更深层级由 nav_sidebar.js 复制生成 -->
+    </div>
   </div>
 </div>
-<!-- 背景蒙版 -->
-<div id="sidebar-backdrop"></div>
+<!-- 共享蒙版。导航抽屉与设置抽屉都用这一个，由 drawer.js 统一控制显隐 -->
+<div class="scrim" id="drawerScrim"></div>

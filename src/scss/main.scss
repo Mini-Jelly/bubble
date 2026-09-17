@@ -1,3 +1,11 @@
+/* 令牌层按「值随什么变化」拆开，改配色时不必在一堆尺寸里找色值：
+     motion   动效（时长 / 曲线 / 交互状态 mixin）
+     tokens   圆角 / 间距 / 层级 —— 既不随 color-scheme 也不随 theme 变
+     shadow   阴影阶梯 —— 随 color-scheme 变（已由 color 内部引用，这里列出便于查找）
+     color    颜色 —— 随 color-scheme 与 theme 变 */
+@use "motion.scss" as *; // 动效令牌与通用交互状态（mixin 需按名调用，故 as *）
+@use "tokens.scss"; // 圆角 / 间距 / 层级
+@use "shadow.scss"; // 阴影阶梯
 @use "color.scss"; // 颜色
 @use "grid.scss"; // 响应式网格
 @use "post.scss"; // 文章
@@ -236,28 +244,48 @@ body {
   li {
     display: inline-block;
     margin: 0 5px;
+    /* 按压反馈挂在 li 上：a 是行内元素，无法应用 transform。
+       JS 把按压态加在 a 上（它才是被按下的控件），所以这里用 :has() 提到 li；
+       :active 保留作无 JS 时的兜底 —— 它会从被按下的 a 冒泡到祖先，正好可用 */
+    transition: transform var(--dur-release) var(--ease-spring);
+
+    &:active,
+    &:has(a.is-pressed) {
+      transform: scale(var(--press-scale));
+      transition-duration: var(--dur-press);
+      transition-timing-function: var(--ease-press-in);
+    }
 
     a {
       color: inherit;
       padding: 6px 12px;
-      border-radius: var(--radius);
+      border-radius: var(--radius-sm);
+      transition: background-color var(--dur-state) var(--ease-standard),
+        color var(--dur-state) var(--ease-standard);
 
-      &:hover {
-        background-color: var(--bg-hover);
-        color: var(--black);
+      @include hover-only {
+        &:hover {
+          background-color: var(--bg-hover);
+          color: var(--black);
+        }
       }
     }
   }
 
   // 当前选中的分页
-  .current {
-    a {
-      color: #fff;
-      background-color: var(--theme-8);
+  .current a {
+    /* 实心面走 --primary-solid（--theme-9）而不是 --theme-8：
+       白字压在 --theme-8 的 yellow #f08c00 上只有 2.5:1。
+       文字色走 --on-primary，它会按主题分档（yellow / lime / green 用深色文字） */
+    position: relative;
+    color: var(--on-primary);
+    background-color: var(--primary-solid);
 
+    @include state-layer;
+
+    @include hover-only {
       &:hover {
-        background-color: var(--theme-5);
-        color: #fff;
+        color: var(--on-primary);
       }
     }
   }
@@ -272,14 +300,18 @@ body {
   color: #000;
 }
 
-/* 特殊适配 */
-[color-scheme="dark"] {
+/* ---------- 跨文档转场 ----------
+   交给浏览器做，不手写 FLIP 克隆：只有浏览器同时持有新旧两个文档的真实快照，
+   能在同一坐标系里补间。手写的克隆一旦尺寸或滚动位置变化就会对不上。
+   不支持的浏览器直接忽略这两条规则，退化成原生跳转 —— 不做 JS 兜底，
+   因为伪造的动画在页面卸载时会被硬切，反而比没有动画更糟。 */
+@view-transition {
+  navigation: auto;
+}
 
-  /* 链接颜色已经由 --link 变量按明暗模式分别取值（见 _color.scss），
-     这里不再需要覆盖 .post a / .footer a 等一大串选择器 */
-  .nav-form-input {
-    background-color: rgba(255, 255, 255, 0.2);
-  }
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: var(--dur-nav);
 }
 
 // 无障碍

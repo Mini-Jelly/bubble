@@ -1,8 +1,10 @@
+@use "../motion.scss" as *;
+
 // 右下角悬浮按钮组（个性化设置 + 回到顶部）
 //
 // 两者都固定在右下角，分开定位会互相压盖、层级也各写各的，故合成一组统一层高。
 // 回到顶部收起时只做 visibility 隐藏、仍然占位，设置按钮的位置因此不随滚动跳动。
-// 层级走 :root 的 --z-fab，刻意压在侧边栏蒙版之下。
+// 层级走 :root 的 --z-fab，刻意压在抽屉蒙版之下。
 .fab-group {
   position: fixed;
   right: 20px;
@@ -12,7 +14,7 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: var(--space-2);
 
   // 这个容器只负责定位，绝不能出现 transform / filter / perspective，
   // 否则会成为内部 position: fixed 元素的包含块，把固定定位整体带坏
@@ -23,39 +25,44 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  /* 48×48 是触摸目标的下限，不是视觉偏好 —— 40px 的按钮在手机上命中率明显偏低 */
+  width: 48px;
+  height: 48px;
   padding: 0;
+  position: relative;
 
   color: var(--text1);
-  background-color: var(--card1);
+  background-color: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--box-shadow);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color var(--dur-state) var(--ease-standard),
+    color var(--dur-state) var(--ease-standard),
+    border-color var(--dur-state) var(--ease-standard);
 
-  &:hover {
-    color: var(--theme-7);
-    background-color: var(--bg-hover);
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--link);
-    outline-offset: 2px;
+  @include hover-only {
+    &:hover {
+      color: var(--theme-7);
+      background-color: var(--bg-hover);
+    }
   }
 
   svg {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
     fill: currentColor;
   }
 
-  // 面板展开时保持高亮，明确「这个面板属于这个按钮」
+  // 面板展开时保持高亮，明确「这个面板属于这个按钮」。
+  // 实心面走 --primary-solid + --on-primary，不用写死的 #fff ——
+  // 12 套主题里有三档（yellow / lime / green）必须配深色文字
   &[aria-expanded="true"] {
-    color: #fff;
-    background-color: var(--theme-8);
+    color: var(--on-primary);
+    background-color: var(--primary-solid);
     border-color: transparent;
+
+    @include state-layer;
   }
 }
 
@@ -65,8 +72,11 @@
   opacity: 0;
   visibility: hidden;
   transform: translateY(8px);
-  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease,
-    background-color 0.2s ease, color 0.2s ease;
+  transition: opacity var(--dur-state) var(--ease-standard),
+    visibility var(--dur-state) var(--ease-standard),
+    transform var(--dur-release) var(--ease-spring),
+    background-color var(--dur-state) var(--ease-standard),
+    color var(--dur-state) var(--ease-standard);
 
   &.is-visible {
     opacity: 1;
@@ -75,31 +85,34 @@
   }
 }
 
-// 设置面板的定位基准。必须是 relative 而非 absolute：
-// 它仍是 .fab-group 的 flex 子项，脱流会让两个按钮重叠。
-.fab-settings {
-  position: relative;
-}
+/* 设置面板。两种形态：
+     宽屏 —— 锚定在设置按钮上方的普通浮层（非模态，点外部关闭）
+     窄屏 —— 底部抽屉（模态，有蒙版、焦点环、拖拽把手）
 
+   面板刻意放在 .fab-group 之外：.fab-group 是 position: fixed，它自己就形成层叠上下文，
+   内部元素再高的 z-index 也盖不过蒙版。代价是宽屏的锚定不能再靠 CSS 的
+   bottom: calc(100% + 8px)，改为由 settings.js 按触发按钮的实测位置写 --panel-anchor-*；
+   顺带解决了「回到顶部被主题设置关掉时按钮整体下移」带来的几何变化。 */
 .settings-panel {
-  position: absolute;
-  right: 0;
-  // 翻到按钮上方。8px 与组内 gap 一致，视觉上与按钮同属一组
-  bottom: calc(100% + 8px);
+  position: fixed;
+  z-index: var(--z-sheet);
+  /* 兜底值只在 JS 尚未跑完时生效，那时面板还是隐藏的 */
+  right: var(--panel-anchor-right, var(--space-5));
+  bottom: var(--panel-anchor-bottom, 132px);
   // 窄屏时不能顶到左边去
-  width: min(280px, calc(100vw - 40px));
+  width: min(300px, calc(100vw - 40px));
   // 视口很矮时面板自己滚动；已在 fab.php 标记 data-lenis-prevent，
   // 面板内的滚轮不会被平滑滚动接管成「滚动正文」
-  max-height: min(70vh, 480px);
+  max-height: min(70vh, 520px);
   overflow: auto;
-  padding: 12px;
-  padding-right: 14px;
+  padding: var(--space-4);
 
   color: var(--text1);
-  background-color: var(--card1);
+  background-color: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--box-shadow);
+  /* 浮层圆角比卡片大一档，才看得出「它浮在卡片之上」 */
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
 
   // 用 visibility 而不是 hidden 属性：hidden 会直接杀掉过渡，
   // 而 visibility: hidden 同样能让隐藏态退出 Tab 顺序与无障碍树
@@ -107,7 +120,19 @@
   visibility: hidden;
   transform: translateY(6px) scale(0.98);
   transform-origin: bottom right;
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+  transition: opacity var(--dur-enter) var(--ease-emphasized),
+    transform var(--dur-enter) var(--ease-emphasized),
+    visibility var(--dur-enter) var(--ease-emphasized);
+
+  /* 拖拽把手。宽屏是浮层，把手没有意义，窄屏的媒体查询里才放出来 */
+  &__handle {
+    display: none;
+    width: 32px;
+    height: 4px;
+    margin: var(--space-2) auto var(--space-4);
+    border-radius: var(--radius-full);
+    background-color: var(--text3);
+  }
 
   &.is-open {
     opacity: 1;
@@ -119,32 +144,36 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: var(--space-3);
   }
 
   &__title {
     font-size: 0.875rem;
-    font-weight: 600;
+    font-weight: 700;
   }
 
   &__reset {
-    padding: 10px;
+    padding: var(--space-2) var(--space-3);
     font-family: inherit;
     font-size: 0.75rem;
-    /* 面板底色是 --card1，暗色下只有 --text1 有足够对比度（--text2 仅 3.5:1） */
+    /* 面板底色是 --surface-1，暗色下只有 --text1 有足够对比度（--text2 仅 3.5:1） */
     color: var(--text1);
     background: none;
     border: 0;
-    border-radius: var(--radius);
+    border-radius: var(--radius-sm);
     cursor: pointer;
+    transition: background-color var(--dur-state) var(--ease-standard),
+      color var(--dur-state) var(--ease-standard);
 
-    &:hover:not(:disabled) {
-      color: var(--link);
-      background-color: var(--bg-hover);
+    @include hover-only {
+      &:hover:not(:disabled) {
+        color: var(--link);
+        background-color: var(--bg-hover);
+      }
     }
 
     // 没有任何本机覆盖时点了也没意义，直接置灰。
-    // 不用 --disabled-text：它在暗色下等于 card1，会变成完全看不见的文字
+    // 不用 --disabled-text：它在暗色下等于 surface-1，会变成完全看不见的文字
     &:disabled {
       opacity: 0.45;
       cursor: default;
@@ -153,7 +182,7 @@
 
   &__note {
     text-align: center;
-    margin: 12px 0 0;
+    margin: var(--space-3) 0 0;
     font-size: 0.75rem;
     line-height: 1.15rem;
     // 同上：--text3 在暗色面板上等于隐形
@@ -163,14 +192,14 @@
 
 // ---------- 单个设置项 ----------
 .field + .field {
-  margin-top: 12px;
+  margin-top: var(--space-4);
 }
 
 .field__head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: var(--space-2);
 }
 
 .field__label {
@@ -183,7 +212,7 @@
 // 它已经按明暗模式分别取了 theme-9 / theme-5，两套底色下都保证可读
 .field__value {
   font-size: 0.8125rem;
-  font-weight: 600;
+  font-weight: 700;
   color: var(--link);
 }
 
@@ -194,8 +223,10 @@
   grid-auto-flow: column;
   grid-auto-columns: 1fr;
   padding: 2px;
-  background-color: var(--card2);
-  border-radius: var(--radius);
+  /* 凹陷轨道。必须比所在表面暗一档 —— 用 --surface-2 的话，
+     未选中的文字压在轨道上，暗色下只有 2.46:1，基本读不出来 */
+  background-color: var(--track);
+  border-radius: var(--radius-full);
 
   // 滑块位置由 JS 写入的 --seg-index 决定，无需为「选中第 n 项」各写一份样式。
   // translateX 的百分比基准是元素自身宽度，滑块宽度正好一格，故直接乘 index。
@@ -205,36 +236,31 @@
     bottom: 2px;
     left: 2px;
     width: calc((100% - 4px) / var(--seg-count, 1));
-    background-color: var(--theme-8);
-    border-radius: calc(var(--radius) - 2px);
-    box-shadow: 0 1px 3px rgb(0 0 0 / 20%);
+    background-color: var(--primary-solid);
+    border-radius: var(--radius-full);
+    box-shadow: var(--shadow-xs);
     transform: translateX(calc(var(--seg-index, 0) * 100%));
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform var(--dur-enter) var(--ease-emphasized);
   }
 
   button {
     position: relative; // 压在滑块之上，否则滑块会盖住文字
     z-index: 1;
-    padding: 5px 4px;
+    min-height: 28px;
+    padding: 5px var(--space-2);
     font-family: inherit;
     font-size: 0.8125rem;
-    // 未选中项的背景是 --card2，比 --card1 更亮，
-    // 用 --text2 时暗色下只有约 2.5:1，基本读不出来
+    // 未选中项压在轨道上，只有 --text1 有足够对比度（--text2 在暗色轨道上仅 2.46:1）
     color: var(--text1);
     background: none;
     border: 0;
-    border-radius: calc(var(--radius) - 2px);
+    border-radius: var(--radius-full);
     cursor: pointer;
-    transition: color 0.2s ease;
-
-    &:focus-visible {
-      outline: 2px solid var(--link);
-      outline-offset: -2px;
-    }
+    transition: color var(--dur-state) var(--ease-standard);
 
     &[aria-checked="true"] {
-      color: #fff;
-      font-weight: 600;
+      color: var(--on-primary);
+      font-weight: 500;
     }
   }
 }
@@ -243,7 +269,7 @@
 .slider {
   position: relative;
   // 上方留给轨道与滑块，下方留给刻度文字
-  height: 36px;
+  height: 40px;
   cursor: pointer;
   // 触屏上拖动滑条不应该顺带把页面滚走
   touch-action: none;
@@ -258,16 +284,16 @@
   &__track,
   &__handle {
     position: absolute;
-    top: 10px;
+    top: 12px;
     height: 4px;
     transform: translateY(-50%);
-    border-radius: 2px;
+    border-radius: var(--radius-full);
   }
 
   &__rail {
     left: 14px;
     right: 14px;
-    background-color: var(--card2);
+    background-color: var(--surface-3);
   }
 
   &__track {
@@ -278,21 +304,22 @@
 
   &__handle {
     left: calc(14px + (100% - 28px) * var(--slider-progress));
-    width: 14px;
-    height: 14px;
-    background-color: var(--card1);
+    /* 20px 而不是 14px：触摸目标要够大，14px 的把手在手机上很难捏住 */
+    width: 20px;
+    height: 20px;
+    background-color: var(--surface-1);
     border: 2px solid var(--theme-6);
     border-radius: 50%;
-    box-shadow: 0 1px 4px rgb(0 0 0 / 25%);
-    transition: transform 0.15s ease;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--dur-state) var(--ease-standard);
   }
 
-  // 键盘聚焦的提示做在滑块上，而不是整个 36px 高的容器上
+  // 键盘聚焦的提示做在滑块上，而不是整个容器上
   &:focus-visible {
     outline: none;
 
     .slider__handle {
-      outline: 2px solid var(--link);
+      outline: 2px solid var(--focus-ring);
       outline-offset: 2px;
     }
   }
@@ -303,7 +330,7 @@
 
   &__marks {
     position: absolute;
-    top: 20px;
+    top: 24px;
     left: 14px;
     right: 14px;
     display: flex;
@@ -330,12 +357,12 @@
   display: grid;
   // 12 个色块固定铺 6 列。写成 auto-fit 会在窄面板里跳成 5 列 / 4 列，反而更乱
   grid-template-columns: repeat(6, 1fr);
-  gap: 12px 0px;
+  gap: var(--space-3) 0;
   justify-items: center;
 
   .swatch {
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     padding: 0;
     // 色块自带 theme="x"（见 views/fab.php），而调色板选择器是 [theme=x] 而非
     // :root[theme=x]，因此这里取到的就是该色真实主色，无需另抄 12 组色值
@@ -343,20 +370,18 @@
     border: 1px solid var(--border);
     border-radius: 50%;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform var(--dur-state) var(--ease-standard),
+      box-shadow var(--dur-state) var(--ease-standard);
 
-    &:hover {
-      transform: scale(1.12);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--link);
-      outline-offset: 2px;
+    @include hover-only {
+      &:hover {
+        transform: scale(1.12);
+      }
     }
 
     // 选中态用外圈：色块本身就要展示颜色，不能再被别的样式覆盖掉
     &[aria-checked="true"] {
-      box-shadow: 0 0 0 2px var(--card1), 0 0 0 4px var(--theme-8);
+      box-shadow: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--primary-solid);
       transform: scale(1.08);
     }
   }
@@ -364,29 +389,45 @@
 
 @media only screen and (max-width: 833px) {
   .fab-group {
-    right: 12px;
-    bottom: 12px;
-  }
-}
-
-// 系统要求「减少动态效果」时，只保留必要的显隐，去掉所有位移与缓动
-@media (prefers-reduced-motion: reduce) {
-
-  .back-to-top,
-  .settings-panel,
-  .segmented__thumb,
-  .slider__handle,
-  .swatches .swatch {
-    transition: none;
+    right: var(--space-3);
+    bottom: var(--space-3);
   }
 
-  .back-to-top,
+  /* 窄屏时设置入口搬到导航右上角（见 views/nav.php），这里藏起来 ——
+     否则同一个面板会有两个同时可见的入口，aria-expanded 也会各说各话。
+     FAB 组因此只剩「回到顶部」一个按钮。 */
+  #settingsFab {
+    display: none;
+  }
+
+  /* ---------- 设置面板的抽屉形态 ----------
+     与 .sidebar 用完全同一组时序和圆角，两个抽屉在手机端读起来是同一个组件。
+     出场比进场快：关闭用 --dur-exit + 加速曲线，打开用 --dur-sheet + 减速曲线
+     （过渡取的是「变化后」那份计算样式，所以两个方向各自生效）。 */
   .settings-panel {
-    transform: none;
-  }
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: auto;
+    max-height: 80vh;
+    padding: 0 var(--space-4) var(--space-6);
+    border: none;
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    box-shadow: var(--shadow-lg);
+    /* 关掉浮层那套缩放，改成整块从下方滑入 */
+    transform: translateY(100%);
+    transform-origin: center bottom;
+    transition: transform var(--dur-exit) var(--ease-exit),
+      visibility 0s linear var(--dur-exit);
 
-  .segmented__thumb {
-    // 位移承载了「选中哪一项」这个信息，不能去掉，只去掉缓动
-    transform: translateX(calc(var(--seg-index, 0) * 100%));
+    &__handle {
+      display: block;
+    }
+
+    &.is-open {
+      transform: none;
+      transition: transform var(--dur-sheet) var(--ease-emphasized),
+        visibility 0s;
+    }
   }
 }

@@ -146,6 +146,32 @@ $escape = static function ($value) {
   // 避免「面板显示的当前值」与「实际生效的值」对不上。
   $visitorDefaults = bubbleVisitorDefaults();
   ?>
+
+  <?php
+  /* 预取站内链接。跨文档转场能「走完」的前提是加载已经结束 ——
+     没有预取时，从点击到新页面出现要等 200ms 到 2s，任何转场都会卡在半路，
+     而这正是「把手机系统那套动画搬到网页上，总差一口气」的直接原因。
+     eagerness: moderate 只在用户悬停 / 触摸按下时才真正发起请求，
+     不会在页面一打开就把整站拉下来。
+     排除后台与「新标签打开」的链接：前者是登录态页面、预取既无意义也浪费流量，
+     后者根本不会导航当前文档。 */
+  echo '<script type="speculationrules">'
+    . json_encode([
+      'prefetch' => [[
+        'where' => [
+          'and' => [
+            ['href_matches' => '/*'],
+            ['not' => ['href_matches' => '/admin/*']],
+            ['not' => ['selector_matches' => '[target=_blank]']],
+            ['not' => ['selector_matches' => '[download]']],
+          ],
+        ],
+        'eagerness' => 'moderate',
+      ]],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)
+    . '</script>';
+  ?>
+
   <script>
     /* 四个属性必须在首屏绘制前写完，否则 CSS 变量取不到值会闪白。
        theme              主题色
