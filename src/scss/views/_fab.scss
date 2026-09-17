@@ -104,7 +104,11 @@
   // 视口很矮时面板自己滚动；已在 fab.php 标记 data-lenis-prevent，
   // 面板内的滚轮不会被平滑滚动接管成「滚动正文」
   max-height: min(70vh, 520px);
-  overflow: auto;
+  /* 只允许纵向滚动。面板里的滑条刻度用 0 宽 + 溢出居中来做「以档位为中心对齐」，
+     末档的文字会压到右边缘上，亚像素级的超出就会让这里冒出一条横向滚动条 ——
+     设置面板永远不需要横向滚动，直接掐掉。 */
+  overflow-x: hidden;
+  overflow-y: auto;
   padding: var(--space-4);
 
   color: var(--text1);

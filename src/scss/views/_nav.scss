@@ -214,7 +214,9 @@ $nav-height: 56px;
       outline: none;
       line-height: 1.5rem;
       color: var(--text1);
-      background-color: var(--surface-2);
+      /* 凹陷输入框用 --track 而不是 --surface-2：暗色下 --surface-2 等于 --text3，
+         占位符会与底色完全同色（1:1）—— 一个字都看不见 */
+      background-color: var(--track);
       transition: background-color var(--dur-state) var(--ease-standard),
         border-color var(--dur-state) var(--ease-standard),
         box-shadow var(--dur-state) var(--ease-standard);
@@ -428,6 +430,11 @@ $nav-height: 56px;
   display: flex;
   flex-direction: column;
   max-height: 80vh;
+  /* 高度由 JS 按「当前那一层的内容高度」写入（见 nav_sidebar.js）。
+     不交给内容自动撑开：track 是 flex 行，它的高度等于最高的一层，
+     层级切换时高度是瞬变的，看起来是跳一下 —— 二级分类比根级高时尤其明显。
+     写入显式高度并带过渡之后，钻进二级会平滑地变高 / 变矮。 */
+  height: var(--sheet-height, auto);
 
   /* 抽屉滚到底后继续滑动不应该把页面一起带走 */
   overscroll-behavior: contain;
@@ -446,6 +453,7 @@ $nav-height: 56px;
   transform: translateY(100%);
   visibility: hidden;
   transition: transform var(--dur-exit) var(--ease-exit),
+    height var(--dur-sheet) var(--ease-emphasized),
     visibility 0s linear var(--dur-exit);
 
   /* 拖拽把手。32×4 的胶囊是系统里通用的「这里可以往下推」的暗号 */
@@ -548,27 +556,29 @@ $nav-height: 56px;
     margin-bottom: var(--space-3);
 
     input[type="text"] {
-        color: var(--text1);
-        width: 100%;
-        height: 100%;
-        border: 1px solid transparent;
-        padding: 5px var(--space-5);
-        border-radius: var(--radius-full) 0 0 var(--radius-full);
-        line-height: inherit;
-        background-color: var(--surface-2);
-        outline: none;
-        transition: border-color var(--dur-state) var(--ease-standard),
-          background-color var(--dur-state) var(--ease-standard);
+      color: var(--text1);
+      width: 100%;
+      height: 100%;
+      border: 1px solid transparent;
+      padding: 5px var(--space-5);
+      border-radius: var(--radius-full) 0 0 var(--radius-full);
+      line-height: inherit;
+      /* 同导航搜索框：凹陷输入框用 --track。暗色下 --surface-2 与 --text3 同值，
+         占位符会完全隐形 */
+      background-color: var(--track);
+      outline: none;
+      transition: border-color var(--dur-state) var(--ease-standard),
+        background-color var(--dur-state) var(--ease-standard);
 
-        &:focus {
-          background-color: var(--surface-1);
-          border-color: var(--theme-6);
-        }
-
-        &::placeholder {
-          color: var(--text3);
-        }
+      &:focus {
+        background-color: var(--surface-1);
+        border-color: var(--theme-6);
       }
+
+      &::placeholder {
+        color: var(--text3);
+      }
+    }
 
       button[type="submit"] {
         height: 100%;
@@ -680,8 +690,10 @@ $nav-height: 56px;
   visibility: visible;
   /* 进场用 --dur-sheet + 减速曲线（起步快、落点稳）。
      过渡取的是「变化后」那份计算样式，所以开门用这里的值、关门用上面的值。
-     visibility 的时长为 0：打开瞬间就可聚焦，focus() 才不会落空。 */
+     visibility 的时长为 0：打开瞬间就可聚焦，focus() 才不会落空。
+     height 与 transform 同时长同曲线 —— 层级切换时两者是一段运动，不是两段。 */
   transition: transform var(--dur-sheet) var(--ease-emphasized),
+    height var(--dur-sheet) var(--ease-emphasized),
     visibility 0s;
 }
 
@@ -707,6 +719,23 @@ $nav-height: 56px;
     visibility: visible;
     opacity: 1;
     transition: opacity var(--dur-sheet) var(--ease-emphasized), visibility 0s;
+  }
+}
+
+/* ---------- 抽屉打开时锁住背景滚动 ----------
+   由 drawer.js 在「模态抽屉」开合时加 / 去 html 上的 .has-drawer-open。
+   蒙版只是视觉遮挡，不拦滚动 —— 不锁的话用户能隔着蒙版把正文滑走。
+
+   用 overflow: hidden 而不是 position: fixed：后者会丢掉滚动位置，
+   关掉抽屉后页面会跳回顶部。
+
+   padding-right 补偿滚动条消失带来的横向位移 —— 窄屏桌面窗口上滚动条占约 15px，
+   不补的话锁定瞬间整页会往右窜一下，看起来就是「弹出来的时候跳了一下」。 */
+html.has-drawer-open {
+  overflow: hidden;
+
+  body {
+    padding-right: var(--scrollbar-gap, 0px);
   }
 }
 

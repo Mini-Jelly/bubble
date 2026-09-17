@@ -8,6 +8,8 @@
  * 全局的 has-drawer-open 都由它派生，不存第二份真源。
  */
 
+import lenis from "./smooth_scroll.js";
+
 /* 抽屉只在窄屏存在：≥834px 时导航恢复完整形态、设置面板变回锚定浮层。
    越过断点还开着的抽屉必须自己关掉，否则横屏后会看到抽屉停在页面中间。 */
 const NARROW = "(max-width: 833px)";
@@ -25,6 +27,34 @@ function visibleFocusables(root) {
   return Array.from(root.querySelectorAll(FOCUSABLE)).filter(
     (el) => el.offsetWidth > 0 || el.offsetHeight > 0
   );
+}
+
+/* 背景滚动锁。
+ *
+ * 蒙版只是视觉遮挡，不拦滚动 —— 不锁的话用户能隔着蒙版把正文滑走。三件事都要做：
+ *   1) lenis.stop() —— Lenis 用原生 scrollTop 驱动，光靠 CSS 的 overflow: hidden
+ *      拦不住它（它是程序化 scrollTo，不受 overflow 限制）
+ *   2) html 上的 .has-drawer-open 给 overflow: hidden —— 拦住原生滚动
+ *      （滚动条拖动、键盘翻页，以及 syncTouch: false 时的触摸惯性）
+ *   3) 补偿滚动条宽度 —— 锁定瞬间滚动条消失会让整页横向位移（窄屏桌面窗口上约 15px），
+ *      给 body 补等宽 padding 就看不出来。必须在加 class 之前量，那时滚动条还在。
+ */
+let scrollLocked = false;
+
+function lockScroll(locked) {
+  if (locked === scrollLocked) return;
+  scrollLocked = locked;
+
+  const root = document.documentElement;
+  if (locked) {
+    root.style.setProperty("--scrollbar-gap", `${window.innerWidth - root.clientWidth}px`);
+    root.classList.add("has-drawer-open");
+    if (lenis) lenis.stop();
+  } else {
+    root.classList.remove("has-drawer-open");
+    root.style.removeProperty("--scrollbar-gap");
+    if (lenis) lenis.start();
+  }
 }
 
 /**
@@ -51,13 +81,12 @@ export function createDrawer(config) {
     return typeof m === "function" ? !!m() : m !== false;
   };
 
-  /* 遮罩是共享的：只要还有「模态的」抽屉开着就显示。
-     非模态形态（宽屏的设置浮层）不该把整页压暗。 */
+  /* 遮罩与滚动锁是共享的：只要还有「模态的」抽屉开着就生效。
+     非模态形态（宽屏的设置浮层）不该把整页压暗，也不该锁滚动。 */
   function syncScrim() {
-    if (!scrimEl) return;
     const anyModalOpen = drawers.some((d) => d.isOpen() && d.isModal());
-    scrimEl.classList.toggle("is-visible", anyModalOpen);
-    document.documentElement.classList.toggle("has-drawer-open", anyModalOpen);
+    if (scrimEl) scrimEl.classList.toggle("is-visible", anyModalOpen);
+    lockScroll(anyModalOpen);
   }
 
   function open(from) {

@@ -40,6 +40,65 @@ document.addEventListener("DOMContentLoaded", () => {
     backBtn.hidden = depth === 0;
   };
 
+  /**
+   * 一层的内容高度。
+   *
+   * 不能用 scrollHeight —— 它返回 max(内容高, 当前高度)，
+   * 当新的一层比当前矮时量出来还是当前高度，抽屉就永远变不矮。
+   * 逐个子元素累加高度与上下外边距，才拿得到「自然高度」。
+   */
+  const levelContentHeight = (level) => {
+    let height = 0;
+    for (const child of level.children) {
+      const style = getComputedStyle(child);
+      height +=
+        child.getBoundingClientRect().height +
+        parseFloat(style.marginTop) +
+        parseFloat(style.marginBottom);
+    }
+    return height;
+  };
+
+  /* 抽屉里「不随层级变化」的那部分高度：拖拽把手 + 标题栏 + 上下内边距。
+     写 --sheet-height 时必须把它算进去 —— 只写层级内容高度的话，
+     整个抽屉会被压成内容那么高，把手和标题栏吃掉的空间会从列表里扣，
+     根层列表就被挤出一条滚动条。 */
+  const chromeHeight = () => {
+    const cs = getComputedStyle(sidebar);
+    const outer = (el) => {
+      if (!el) return 0;
+      const s = getComputedStyle(el);
+      return el.getBoundingClientRect().height + parseFloat(s.marginTop) + parseFloat(s.marginBottom);
+    };
+    return (
+      parseFloat(cs.paddingTop) +
+      parseFloat(cs.paddingBottom) +
+      outer(sidebar.querySelector(".sidebar-handle")) +
+      outer(sidebar.querySelector(".sidebar-header"))
+    );
+  };
+
+  /* 抽屉高度跟随「当前那一层」，而不是最高的一层 ——
+     交给内容自动撑开的话（track 是 flex 行，高度等于最高层），
+     层级切换时高度是瞬变的，看起来就是跳一下。
+     写入 --sheet-height 后由 CSS 的 height 过渡接管，钻进二级会平滑变高 / 变矮。 */
+  const syncHeight = (animate = true) => {
+    const active = levels()[depth];
+    if (!active) return;
+
+    const height = Math.round(chromeHeight() + levelContentHeight(active));
+    // 宽屏时 .sidebar 是 display:none，量出来全是 0；跳过，等打开时再算
+    if (height <= 0) return;
+
+    if (!animate) sidebar.style.transition = "none";
+    sidebar.style.setProperty("--sheet-height", `${height}px`);
+    if (!animate) {
+      // 强制一次样式重算，再把过渡还回去，否则复位会被看到
+      void sidebar.offsetHeight;
+      sidebar.style.transition = "";
+    }
+  };
+
   const push = (sub, name) => {
     const level = document.createElement("div");
     level.className = "sidebar-level";
@@ -52,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
     depth = levels().length - 1;
     syncTrack();
     syncHeader();
+    syncHeight();
 
     // 切层之后把焦点送进新的一层，键盘用户不会还停在上一层
     const first = level.querySelector("a[href], button:not([disabled])");
@@ -64,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
     depth -= 1;
     syncTrack();
     syncHeader();
+    syncHeight();
     window.setTimeout(() => leaving.remove(), LEVEL_EXIT_MS);
   };
 
@@ -109,6 +170,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .slice(1)
       .forEach((level) => level.remove());
     syncHeader();
+    syncHeight(false);
     // 强制一次样式重算，再把过渡还回去
     void track.offsetHeight;
     track.style.transition = "";
@@ -119,6 +181,10 @@ document.addEventListener("DOMContentLoaded", () => {
     triggers: [trigger],
     scrim: getById("drawerScrim"),
     handle: sidebar.querySelector(".sidebar-handle"),
+    /* 每次打开重算一次高度。宽屏时抽屉是 display:none、量不出高度，
+       而宽度跨回窄屏时不会重新初始化 —— 不重算就会带着旧值打开。
+       不带过渡：打开是「从下方滑入」，高度不该同时长一遍。 */
+    onOpen: () => syncHeight(false),
     onClose: () => {
       window.setTimeout(() => {
         // 期间又被打开的话不要复位，否则会看到当前层突然消失
@@ -132,4 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
   levels()[0].dataset.title = ROOT_TITLE;
   decorate(levels()[0]);
   syncHeader();
+  // 初始高度不带过渡：否则首屏会看到抽屉从 0 长出来
+  syncHeight(false);
 });
