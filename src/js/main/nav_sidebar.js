@@ -132,6 +132,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  /**
+   * 把焦点送进某一层，但**不要让它滚动容器**。
+   *
+   * focus() 默认会把目标滚进视野。新的一层此刻还在右边屏幕外，而它所在的
+   * .sidebar-body 是 overflow: hidden —— 这个容器**仍然可以被程序化滚动**，
+   * 于是浏览器把容器横向滚了整整一屏。
+   * 那个滚动和 track 的横移恰好方向相反、幅度相同，两者互相抵消，
+   * 净位移永远是 0 —— 表现就是「数值上在动、画面上直接跳变」，并且会左右抖。
+   */
+  const focusIn = (level) => {
+    const first = level.querySelector("a[href], button:not([disabled])");
+    if (first) first.focus({ preventScroll: true });
+  };
+
   const push = (sub, name) => {
     const level = document.createElement("div");
     level.className = "sidebar-level";
@@ -147,8 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
     syncHeight();
 
     // 切层之后把焦点送进新的一层，键盘用户不会还停在上一层
-    const first = level.querySelector("a[href], button:not([disabled])");
-    if (first) first.focus();
+    focusIn(level);
   };
 
   const pop = () => {
@@ -158,6 +171,11 @@ document.addEventListener("DOMContentLoaded", () => {
     syncTrack();
     syncHeader();
     syncHeight();
+
+    /* 焦点此刻还在离场那一层里，那一层被删掉后焦点会掉到 <body>，
+       键盘用户就「丢」了位置。先把它接回上一层。 */
+    focusIn(levels()[depth]);
+
     // 等横移真的走完再删，否则动画还在放，那一层的内容就先没了
     afterSlide(() => leaving.remove());
   };

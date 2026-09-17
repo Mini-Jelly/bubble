@@ -326,6 +326,7 @@ $nav-height: 56px;
         li a {
           display: flex;
           align-items: center;
+          justify-content: center;
           min-height: 44px;
           padding: 0 var(--space-4);
           color: var(--text1);
@@ -442,7 +443,7 @@ $nav-height: 56px;
   scrollbar-width: none;
   list-style-type: none;
 
-  padding: 0 var(--space-4) var(--space-4);
+  padding: 0 var(--space-4);
   background-color: var(--surface-1);
   border-radius: var(--radius-xl) var(--radius-xl) 0 0;
   box-shadow: var(--shadow-lg);
@@ -544,11 +545,18 @@ $nav-height: 56px;
     color: var(--text1);
   }
 
-  /* 层级视窗。overflow: hidden 是横移的前提 —— 不裁切的话相邻层会露在两边。 */
+  /* 层级视窗。裁切是横移的前提 —— 不裁的话相邻层会露在两边。
+
+     横向必须用 clip 而不是 hidden：**overflow: hidden 的容器仍然可以被程序化滚动**。
+     把焦点送进还没滑进来的那一层时，focus() 默认会「滚进视野」，
+     浏览器就把这个容器横向滚走一整屏 —— 它和 track 的位移方向相反、幅度相同，
+     两者互相抵消，净位移永远是 0。表现就是「数值上在动、画面上直接跳变」，还会左右抖。
+     先写 overflow: hidden 兜底，再用 clip 覆盖横向；clip 不被支持时仍是 hidden。 */
   &-body {
     flex: 1 1 auto;
     min-height: 0;
     overflow: hidden;
+    overflow-x: clip;
   }
 
   /* 所有层级横向排开，靠 translateX 切换。
