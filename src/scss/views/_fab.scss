@@ -128,14 +128,33 @@
     transform var(--dur-enter) var(--ease-emphasized),
     visibility var(--dur-enter) var(--ease-emphasized);
 
-  /* 拖拽把手。宽屏是浮层，把手没有意义，窄屏的媒体查询里才放出来 */
+  /* 拖拽把手。宽屏是浮层，把手没有意义，窄屏的媒体查询里才放出来。
+     与 .sidebar-handle 同款：元素盒是 44 高的拖拽带，胶囊画在中间 ——
+     4px 高的目标手指按不到。 */
   &__handle {
     display: none;
-    width: 32px;
-    height: 4px;
-    margin: var(--space-2) auto var(--space-4);
-    border-radius: var(--radius-full);
-    background-color: var(--text3);
+    position: relative;
+    width: 100%;
+    height: 44px;
+    /* 不写这条，触摸设备上竖着拖会被判成滚动页面，pointermove 被 pointercancel 掐断 */
+    touch-action: none;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 32px;
+      height: 4px;
+      transform: translate(-50%, -50%);
+      border-radius: var(--radius-full);
+      background-color: var(--text3);
+    }
   }
 
   &.is-open {

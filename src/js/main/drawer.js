@@ -65,11 +65,13 @@ function lockScroll(locked) {
  * @param {Element}  [config.handle]   拖拽把手
  * @param {boolean|Function} [config.modal=true] 是否走模态行为（遮罩 + 焦点环）。
  *        传函数则每次实时求值 —— 设置面板在窄屏是模态抽屉、宽屏是普通浮层。
+ * @param {Function} [config.onBeforeOpen] 在加 .is-open 之前跑 —— 需要「不带动画地
+ *        先把状态摆正」的事情放这里，放 onOpen 会掐掉刚起步的过渡
  * @param {Function} [config.onOpen]
  * @param {Function} [config.onClose]
  */
 export function createDrawer(config) {
-  const { root, triggers = [], scrim, handle, onOpen, onClose } = config;
+  const { root, triggers = [], scrim, handle, onBeforeOpen, onOpen, onClose } = config;
   if (!root) return null;
   if (scrim) scrimEl = scrim;
 
@@ -96,6 +98,12 @@ export function createDrawer(config) {
     drawers.forEach((d) => {
       if (d !== api && d.isOpen()) d.close();
     });
+
+    /* 「打开前」钩子必须在加 .is-open 之前跑。
+       在 onOpen 里做任何会写 inline transition 的事（比如为了不带动画地
+       重算高度而临时 transition: none）都会把刚起步的过渡就地掐掉 ——
+       表现是抽屉不滑入、直接蹦出来。 */
+    if (onBeforeOpen) onBeforeOpen();
 
     root.classList.add("is-open");
     triggers.forEach((t) => t.setAttribute("aria-expanded", "true"));

@@ -23,9 +23,39 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!track || !titleEl || !backBtn) return;
 
   const ROOT_TITLE = titleEl.textContent.trim() || "导航";
-  /* 与 --dur-sheet（300ms）对齐：等横移动画走完再删掉离场的那一层，
-     否则会看到它凭空消失 */
-  const LEVEL_EXIT_MS = 320;
+
+  /**
+   * 读一个时长令牌的毫秒数。
+   *
+   * 不要在任何地方写死毫秒 —— 调试时把 --dur-* 调长是常规操作，
+   * 写死的值会立刻和实际动画对不上（离场的那一层在动画走完前就被删掉，
+   * 看起来就是「二级菜单的内容凭空消失」）。
+   */
+  const cssMs = (name, fallback) => {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    const n = parseFloat(raw);
+    if (!Number.isFinite(n)) return fallback;
+    return raw.endsWith("ms") ? n : n * 1000;
+  };
+
+  /* 等 track 的横移真的结束。
+     transitionend 优先（时长被改成多少都准），再用当前时长兜底 ——
+     过渡被中断时 transitionend 不会触发，没有兜底就会永远卡住。 */
+  const afterSlide = (fn) => {
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      track.removeEventListener("transitionend", onEnd);
+      window.clearTimeout(fallback);
+      fn();
+    };
+    const onEnd = (event) => {
+      if (event.target === track && event.propertyName === "transform") finish();
+    };
+    track.addEventListener("transitionend", onEnd);
+    const fallback = window.setTimeout(finish, cssMs("--dur-sheet", 300) + 150);
+  };
 
   let depth = 0;
 
@@ -78,15 +108,18 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
-  /* 抽屉高度跟随「当前那一层」，而不是最高的一层 ——
-     交给内容自动撑开的话（track 是 flex 行，高度等于最高层），
-     层级切换时高度是瞬变的，看起来就是跳一下。
-     写入 --sheet-height 后由 CSS 的 height 过渡接管，钻进二级会平滑变高 / 变矮。 */
+  /* 抽屉高度 = 当前层级栈里最高的一层 —— 也就是「变长不变短」。
+     钻进一个很短的二级分类时抽屉不变矮（否则刚滑过去就整个缩一下，很跳），
+     二级更高时才长高；返回时栈变短，高度自然收回去。
+     写入 --sheet-height 后由 CSS 的 height 过渡接管，是连续的而不是跳变。 */
   const syncHeight = (animate = true) => {
-    const active = levels()[depth];
-    if (!active) return;
+    const stack = levels().slice(0, depth + 1);
+    if (stack.length === 0) return;
 
-    const height = Math.round(chromeHeight() + levelContentHeight(active));
+    let content = 0;
+    for (const level of stack) content = Math.max(content, levelContentHeight(level));
+
+    const height = Math.round(chromeHeight() + content);
     // 宽屏时 .sidebar 是 display:none，量出来全是 0；跳过，等打开时再算
     if (height <= 0) return;
 
@@ -125,7 +158,8 @@ document.addEventListener("DOMContentLoaded", () => {
     syncTrack();
     syncHeader();
     syncHeight();
-    window.setTimeout(() => leaving.remove(), LEVEL_EXIT_MS);
+    // 等横移真的走完再删，否则动画还在放，那一层的内容就先没了
+    afterSlide(() => leaving.remove());
   };
 
   /**
@@ -181,15 +215,16 @@ document.addEventListener("DOMContentLoaded", () => {
     triggers: [trigger],
     scrim: getById("drawerScrim"),
     handle: sidebar.querySelector(".sidebar-handle"),
-    /* 每次打开重算一次高度。宽屏时抽屉是 display:none、量不出高度，
+    /* 每次打开前重算一次高度。宽屏时抽屉是 display:none、量不出高度，
        而宽度跨回窄屏时不会重新初始化 —— 不重算就会带着旧值打开。
-       不带过渡：打开是「从下方滑入」，高度不该同时长一遍。 */
-    onOpen: () => syncHeight(false),
+       必须放在 onBeforeOpen：syncHeight(false) 会临时写 inline transition: none，
+       放在 onOpen 会把刚起步的滑入过渡就地掐掉，抽屉就变成「蹦出来」。 */
+    onBeforeOpen: () => syncHeight(false),
     onClose: () => {
       window.setTimeout(() => {
         // 期间又被打开的话不要复位，否则会看到当前层突然消失
         if (!drawer.isOpen()) resetToRoot();
-      }, LEVEL_EXIT_MS);
+      }, cssMs("--dur-exit", 140) + 60);
     },
   });
 

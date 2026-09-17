@@ -256,6 +256,7 @@ $nav-height: 56px;
       padding: 0 var(--space-4);
       color: var(--text1);
       white-space: nowrap;
+      justify-content: center;
       transition: background-color var(--dur-state) var(--ease-standard),
         color var(--dur-state) var(--ease-standard);
 
@@ -456,14 +457,34 @@ $nav-height: 56px;
     height var(--dur-sheet) var(--ease-emphasized),
     visibility 0s linear var(--dur-exit);
 
-  /* 拖拽把手。32×4 的胶囊是系统里通用的「这里可以往下推」的暗号 */
+  /* 拖拽把手。视觉上是系统里通用的「这里可以往下推」的 32×4 胶囊，
+     但元素盒是整条 44 高的拖拽带 —— 4px 高的目标手指根本按不到，
+     安卓的触摸目标下限是 44px。胶囊用 ::before 画在拖拽带中间。 */
   &-handle {
+    position: relative;
     flex: 0 0 auto;
-    width: 32px;
-    height: 4px;
-    margin: var(--space-2) auto var(--space-2);
-    border-radius: var(--radius-full);
-    background-color: var(--text3);
+    width: 100%;
+    height: 44px;
+    /* 必须独占触摸手势：不写这条，触摸设备上竖着拖会被浏览器判成滚动页面，
+       pointermove 直接被 pointercancel 掐断 —— 表现就是「把手拖不动」 */
+    touch-action: none;
+    cursor: grab;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 32px;
+      height: 4px;
+      transform: translate(-50%, -50%);
+      border-radius: var(--radius-full);
+      background-color: var(--text3);
+    }
   }
 
   /* 钻取导航的标题栏。层级切换时它不动 —— 只有下面的 track 在横移。
