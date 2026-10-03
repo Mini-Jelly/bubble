@@ -34,7 +34,6 @@ $nav-height: 56px;
 }
 
 .nav {
-  // 层级统一走 :root 的 --z-* 令牌（见 _color.scss），不再各处硬编码数字
   z-index: var(--z-nav);
   width: 100%;
   height: #{$nav-height};
@@ -42,10 +41,6 @@ $nav-height: 56px;
      底部抽屉是 body 的另一个子元素，不受这里的 backdrop-filter 影响 */
   position: sticky;
   top: 0;
-
-  /* 毛玻璃中性材质，不再是实心的 --theme-9。
-     实心高饱和底色会和 12 套主题互相打架，滚动时整条色带也过于抢眼。
-     主题色改由 logo、选中态与按钮承载。 */
   background-color: var(--material);
   backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
@@ -55,9 +50,7 @@ $nav-height: 56px;
   justify-content: space-between;
   padding: 0 var(--space-4);
 
-  /* 常驻的底部细分隔线。为什么必须有：页面顶部时导航背后就是纯白页面底，
-     没有内容可模糊，80% 白压白仍然让整条导航「消失」——
-     弱的根因不是不透明度不够，是既没有边界也没有颜色。
+  /* 常驻的底部细分隔线。页面顶部时导航背后就是纯白页面底，没有内容可模糊。
      用 inset 阴影而不是 border-bottom：border 会把 56px 的内容区压成 55px，
      而 inset 阴影不参与布局，还能和滚动阴影写在同一个属性里。 */
   box-shadow: inset 0 -1px 0 var(--divider);
@@ -89,8 +82,7 @@ $nav-height: 56px;
     align-items: center;
     justify-content: center;
     color: var(--text1);
-    transition: background-color var(--dur-state) var(--ease-standard),
-      transform var(--dur-release) var(--ease-spring);
+    transition: background-color var(--dur-state) var(--ease-standard);
 
     svg {
       fill: currentColor;
@@ -100,12 +92,6 @@ $nav-height: 56px;
       &:hover {
         background-color: var(--bg-hover);
       }
-    }
-
-    @include pressed {
-      transform: scale(0.94);
-      transition-duration: var(--dur-press);
-      transition-timing-function: var(--ease-press-in);
     }
   }
 
@@ -133,8 +119,7 @@ $nav-height: 56px;
       object-fit: contain;
       object-position: left center;
       // 不要改成 height: auto + max-height：img 失去确定高度基准后会被搜索框挤小（120×48 → 66×27）
-      transition: opacity var(--dur-state) var(--ease-standard),
-        transform var(--dur-release) var(--ease-spring);
+      transition: opacity var(--dur-state) var(--ease-standard);
 
       /* 主题自带的 logo 是「透明底 + 纯白」，本来是配实心 --theme-9 的深色导航用的。
          导航换成浅色毛玻璃之后它在浅色下会完全消失，所以按明暗模式反转。
@@ -144,19 +129,10 @@ $nav-height: 56px;
       }
     }
 
-    /* 反馈挂在 img 而不是 a 上：a 是行内元素，无法应用 transform；
-       改成 inline-block 会引入基线间隙，可能把导航栏顶高 */
     @include hover-only {
       a:hover img {
         opacity: 0.82;
       }
-    }
-
-    a:active img,
-    a.is-pressed img {
-      transform: scale(0.96);
-      transition-duration: var(--dur-press);
-      transition-timing-function: var(--ease-press-in);
     }
   }
 
@@ -177,8 +153,7 @@ $nav-height: 56px;
       height: #{$nav-height - 16px};
       padding: 0 var(--space-3);
       border-radius: var(--radius-full);
-      transition: background-color var(--dur-state) var(--ease-standard),
-        transform var(--dur-release) var(--ease-spring);
+      transition: background-color var(--dur-state) var(--ease-standard);
 
       svg {
         fill: currentColor;
@@ -188,14 +163,6 @@ $nav-height: 56px;
         &:hover {
           background-color: var(--bg-hover);
         }
-      }
-
-      /* 搜索按钮聚焦时 .rotate 会启动 rotateAnimation，动画优先级高于普通声明，
-         此时 transform 被动画接管 —— 背景变化仍可见，反馈不会丢 */
-      @include pressed {
-        transform: scale(0.9);
-        transition-duration: var(--dur-press);
-        transition-timing-function: var(--ease-press-in);
       }
     }
 
@@ -249,6 +216,7 @@ $nav-height: 56px;
        与顶级分类项共用同一套外观：同样的内边距、悬停底、当前项指示条。 */
     .nav-link,
     >.category-list>li>a {
+      min-width: 60px;
       position: relative;
       display: inline-flex;
       align-items: center;
@@ -264,10 +232,6 @@ $nav-height: 56px;
         &:hover {
           background-color: var(--bg-hover);
         }
-      }
-
-      @include pressed {
-        color: var(--link);
       }
 
       /* 当前项指示条。3px 主题色横条压在导航下沿，左右缩进与文字对齐。
@@ -379,9 +343,6 @@ $nav-height: 56px;
         }
       }
 
-      @include pressed {
-        color: var(--link);
-      }
     }
   }
 }
@@ -414,28 +375,20 @@ $nav-height: 56px;
   }
 }
 
-/* ---------- 底部抽屉（手机端导航） ----------
-   为什么不是侧滑抽屉：底部抽屉是安卓系统里真实存在、且网页能 100% 复现的组件 ——
-   不需要任何系统权限，单手可达，也符合「从下方升起」的移动端心智。
-   顶部圆角 28px + 拖拽把手，让它读起来是「一个可以推回去的面板」而不是一个页面。
-
-   内部是「钻取」而不是手风琴：每一层是等宽的一屏，点 › 时整条 track 横移一屏。
-   手风琴在这个高度里必然溢出 —— 基础列表 8 行 + 一个 7 项的展开组 ≈ 888px，
-   而 80vh 只有 675px，只能靠滚。 */
+/* ---------- 底部抽屉（手机端导航） ----------*/
 .sidebar {
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: var(--z-sheet);
-
   display: flex;
   flex-direction: column;
   max-height: 80vh;
   /* 高度由 JS 按「当前那一层的内容高度」写入（见 nav_sidebar.js）。
      不交给内容自动撑开：track 是 flex 行，它的高度等于最高的一层，
      层级切换时高度是瞬变的，看起来是跳一下 —— 二级分类比根级高时尤其明显。
-     写入显式高度并带过渡之后，钻进二级会平滑地变高 / 变矮。 */
+     写入显式高度并带过渡之后，钻进二级会平滑地 变高/变矮。 */
   height: var(--sheet-height, auto);
 
   /* 抽屉滚到底后继续滑动不应该把页面一起带走 */
@@ -512,8 +465,7 @@ $nav-height: 56px;
     color: var(--text1);
     background-color: transparent;
     cursor: pointer;
-    transition: background-color var(--dur-state) var(--ease-standard),
-      transform var(--dur-release) var(--ease-spring);
+    transition: background-color var(--dur-state) var(--ease-standard);
 
     /* [hidden] 的 UA 默认是 display:none，但上面写了 display:flex 会把它盖掉 */
     &[hidden] {
@@ -532,11 +484,6 @@ $nav-height: 56px;
       }
     }
 
-    @include pressed {
-      transform: scale(0.9);
-      transition-duration: var(--dur-press);
-      transition-timing-function: var(--ease-press-in);
-    }
   }
 
   &-title {
@@ -547,7 +494,7 @@ $nav-height: 56px;
 
   /* 层级视窗。裁切是横移的前提 —— 不裁的话相邻层会露在两边。
 
-     横向必须用 clip 而不是 hidden：**overflow: hidden 的容器仍然可以被程序化滚动**。
+     横向必须用 clip，hidden：overflow: hidden 的容器仍然可以被程序化滚动。
      把焦点送进还没滑进来的那一层时，focus() 默认会「滚进视野」，
      浏览器就把这个容器横向滚走一整屏 —— 它和 track 的位移方向相反、幅度相同，
      两者互相抵消，净位移永远是 0。表现就是「数值上在动、画面上直接跳变」，还会左右抖。
@@ -575,8 +522,7 @@ $nav-height: 56px;
     scrollbar-width: none;
   }
 
-  /* 搜索框。原来是独立的 .sidebar-header，现在收进第一层里 ——
-     它是根级的动作，钻到子级时不该继续占着标题栏。 */
+  /* 搜索框。*/
   &-search {
     display: flex;
     height: 48px;
@@ -609,25 +555,19 @@ $nav-height: 56px;
       }
     }
 
-      button[type="submit"] {
-        height: 100%;
-        border: none;
-        /* 实心面走 --primary-solid + --on-primary，不用写死的 #fff：
-           12 套主题里有三档（yellow / lime / green）必须配深色文字 */
-        background-color: var(--primary-solid);
-        color: var(--on-primary);
-        border-radius: 0 var(--radius-full) var(--radius-full) 0;
-        padding: 0 var(--space-4);
-        cursor: pointer;
-        position: relative;
+    button[type="submit"] {
+      height: 100%;
+      border: none;
+      /* 12 套主题里有三档（yellow / lime / green）必须配深色文字 */
+      background-color: var(--primary-solid);
+      color: var(--on-primary);
+      border-radius: 0 var(--radius-full) var(--radius-full) 0;
+      padding: 0 var(--space-4);
+      cursor: pointer;
+      position: relative;
 
-        @include state-layer;
-
-        @include pressed {
-          transform: scale(0.96);
-          transition: transform var(--dur-press) var(--ease-press-in);
-        }
-      }
+      @include state-layer;
+    }
   }
 
   &-list {
@@ -665,11 +605,6 @@ $nav-height: 56px;
             background-color: var(--bg-hover);
           }
         }
-
-        // 整行是块状元素，按按压缩放会让行宽缩水，改用透明度表示按下
-        @include pressed {
-          opacity: 0.65;
-        }
       }
     }
   }
@@ -706,9 +641,6 @@ $nav-height: 56px;
       }
     }
 
-    @include pressed {
-      opacity: 0.6;
-    }
   }
 }
 

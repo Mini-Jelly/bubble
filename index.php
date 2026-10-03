@@ -23,8 +23,7 @@ $this->need('./views/header.php'); ?>
           if ($this->options->swiper) {
             $this->need('./views/swiper.php');
           }
-          // 老用户升级主题后新增配置项为 NULL，直接和 'on' 比较会导致标签云静默消失
-          if (($this->options->tagCloud ?? 'on') === 'on') {
+          if ($this->options->tagCloud ===  'on') {
             $this->need('./views/tag_cloud.php');
           }
         }

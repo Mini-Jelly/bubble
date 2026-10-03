@@ -25,7 +25,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  /* 48×48 是触摸目标的下限，不是视觉偏好 —— 40px 的按钮在手机上命中率明显偏低 */
+  /* 48×48 是触摸目标的下限，40px 的按钮在手机上命中率明显偏低 */
   width: 48px;
   height: 48px;
   padding: 0;
@@ -74,7 +74,7 @@
   transform: translateY(8px);
   transition: opacity var(--dur-state) var(--ease-standard),
     visibility var(--dur-state) var(--ease-standard),
-    transform var(--dur-release) var(--ease-spring),
+    transform var(--dur-spring) var(--ease-spring),
     background-color var(--dur-state) var(--ease-standard),
     color var(--dur-state) var(--ease-standard);
 

@@ -138,9 +138,8 @@ $escape = static function ($value) {
   // 加载自定义头部代码
   $this->options->customHeader();
 
-  // 站外链接新窗口开关：在 <html> 上打标记，由 main.js 只给站外链接补 target="_blank"。
-  // 不能用 <base target="_blank">：它会把站内分页和锚点也一并变成新标签页。
-  $openInNewWindow = ($this->options->openInNewWindow ?? 'off') === 'on' ? 'on' : 'off';
+  /* 链接打开方式：写进 <html>，由 link_targets.js 按站内 / 站外分别补 target */
+  $linkTargets = bubbleLinkTargets();
 
   // 访客个性化设置的后台默认值，与设置面板（views/fab.php）共用同一份，
   // 避免「面板显示的当前值」与「实际生效的值」对不上。
@@ -217,7 +216,10 @@ $escape = static function ($value) {
       html.setAttribute('color-scheme', mode);
       html.setAttribute('font-size-mode', read('font-size'));
       html.setAttribute('font-family-mode', read('font-family'));
-      html.setAttribute('open-new-window', '<?= $openInNewWindow ?>');
+      /* 站内 / 站外的打开方式，由 link_targets.js 读取。
+         值就是 target 的字面值（_self / _blank），JS 直接喂给 link.target，不必再映射一次 */
+      html.setAttribute('link-target-internal', '<?= $linkTargets['internal'] ?>');
+      html.setAttribute('link-target-external', '<?= $linkTargets['external'] ?>');
     })();
   </script>
 </head>

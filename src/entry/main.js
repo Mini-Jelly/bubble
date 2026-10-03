@@ -8,14 +8,13 @@ import "normalize.css";
 import "../scss/main.scss";
 //引入js
 import "../js/main/smooth_scroll.js";
-import "../js/main/press_feedback.js";
 import "../js/main/drawer.js";
 import "../js/main/nav.js";
 import "../js/main/nav_sidebar.js";
 import "../js/main/post_toc.js";
 import "../js/main/settings.js";
 import "../js/main/footer.js";
-import "../js/main/external_links.js";
+import "../js/main/link_targets.js";
 import "../js/main/back_to_top.js";
 
 /* 以下资源只在特定页面用得到，按需动态加载，避免全站买单 */

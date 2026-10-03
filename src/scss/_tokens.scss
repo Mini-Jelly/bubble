@@ -11,9 +11,6 @@
   --radius-xl: 24px; /* 抽屉顶部、对话框 */
   --radius-full: 999px; /* 胶囊、圆 */
 
-  /* 兼容别名：旧代码里大量使用 var(--radius)，指向主圆角即可全站自动升级 */
-  --radius: var(--radius-md);
-
   /* ---------- 间距阶梯（基数 4px） ---------- */
   --space-1: 4px;
   --space-2: 8px;

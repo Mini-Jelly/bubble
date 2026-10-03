@@ -52,19 +52,34 @@ function themeConfig($form)
   $fontFamily->setAttribute('class', 'bubble-option Global');
   $form->addInput($fontFamily);
 
-  /* 在新窗口打开 */
-  $openInNewWindow = new Typecho_Widget_Helper_Form_Element_Select(
-    'openInNewWindow',
+  /* 链接打开方式：站内 / 站外各自可配 */
+  $internalLinkTarget = new Typecho_Widget_Helper_Form_Element_Select(
+    'internalLinkTarget',
     array(
-      'off' => '关闭 - 页内跳转',
-      'on' => '打开 - 新窗口打开链接',
+      '_self' => '当前窗口（默认）',
+      '_blank' => '新窗口',
     ),
-    'off',
-    '全局新窗口打开',
-    '介绍：选择新窗口是页内跳转的方式或者新窗口打开的方式</br>'
+    '_self',
+    '站内链接打开方式',
+    '介绍：本站链接（文章、分类、分页、导航等）的打开方式。<br />
+    选择「新窗口」会让每次站内跳转都开新标签页，主题的跨文档转场同时失效（转场只在当前文档内生效），请谨慎选择。'
   );
-  $openInNewWindow->setAttribute('class', 'bubble-option Global');
-  $form->addInput($openInNewWindow);
+  $internalLinkTarget->setAttribute('class', 'bubble-option Global');
+  $form->addInput($internalLinkTarget);
+
+  $externalLinkTarget = new Typecho_Widget_Helper_Form_Element_Select(
+    'externalLinkTarget',
+    array(
+      '_self' => '当前窗口（默认）',
+      '_blank' => '新窗口',
+    ),
+    '_self',
+    '站外链接打开方式',
+    '介绍：其他域名的链接的打开方式。<br />
+    选择「新窗口」时，新标签页会自动补上 rel="noopener noreferrer"，避免新页面通过 window.opener 反向操作本页。'
+  );
+  $externalLinkTarget->setAttribute('class', 'bubble-option Global');
+  $form->addInput($externalLinkTarget);
 
   /* 回到顶部按钮 */
   $backToTop = new Typecho_Widget_Helper_Form_Element_Select(

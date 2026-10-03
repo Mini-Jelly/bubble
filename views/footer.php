@@ -22,7 +22,7 @@
     <?php
     // 页面耗时 / 内存占用属于调试信息，默认不再对外输出。
     // 需要排查性能时到「开发者选项」里把「显示页面耗时」打开。
-    if (($this->options->showPageUsage ?? 'off') === 'on'):
+    if ($this->options->showPageUsage === 'on'):
       $usageInfo = getPageUsage(); ?>
       <p>
         页面生成时间:<?= $usageInfo['page_generation_time'] ?>

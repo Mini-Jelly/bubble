@@ -126,10 +126,6 @@ ol {
 /* 自定义标准样式 */
 blockquote {
   border: none;
-  /* 原本写的是 var(--tertiaryText) —— 全项目没有这个变量，声明静默失效，
-     引用框实际继承了正文色。改为 --text1：正文所在容器是 .post（背景 --card1），
-     按项目已有约定「卡片表面需要阅读的文字一律用 --text1」取值，
-     亮色 11.5:1 / 暗色 5.5:1，两个模式都能过 WCAG AA。 */
   color: var(--text1);
   font-size: 1rem;
   text-indent: 0;
@@ -155,10 +151,7 @@ blockquote {
   &:before,
   &:after {
     font-size: 4rem;
-    /* 原本是写死的 #e0e0e0（亮色专用值）：暗色卡片底 #343a40 上它会跳成
-       最亮的一块，比引文本身还抢眼。改用 --card2 —— 亮色 #e9ecef 与 #e0e0e0
-       肉眼无差，暗色 #495057 退成恰到好处的装饰色，两模式观感一致。 */
-    color: var(--card2);
+    color: var(--surface-2);
     line-height: 1em;
     font-weight: 700;
     position: absolute;
@@ -179,7 +172,7 @@ table {
   border-spacing: 0;
 
   th {
-    background: var(--card2);
+    background: var(--surface-2);
   }
 
   td,
@@ -191,7 +184,7 @@ table {
 }
 
 body {
-  background-color: var(--body);
+  background-color: var(--bg-base);
 }
 
 /* HarmonyOS Sans SC（字重均为 400）按码位切成了三片子集。
@@ -234,9 +227,9 @@ body {
 .page-navigator {
   text-align: center; // 居中li元素
   line-height: 3rem;
-  background-color: var(--card1);
-  border-radius: var(--radius);
-  box-shadow: var(--box-shadow);
+  background-color: var(--surface-1);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
   overflow-x: auto;
   // "justify-content:center" 不能和 "overflow-x:auto" 一起使用，否则会怎么样我忘记了
   white-space: nowrap;
@@ -244,17 +237,6 @@ body {
   li {
     display: inline-block;
     margin: 0 5px;
-    /* 按压反馈挂在 li 上：a 是行内元素，无法应用 transform。
-       JS 把按压态加在 a 上（它才是被按下的控件），所以这里用 :has() 提到 li；
-       :active 保留作无 JS 时的兜底 —— 它会从被按下的 a 冒泡到祖先，正好可用 */
-    transition: transform var(--dur-release) var(--ease-spring);
-
-    &:active,
-    &:has(a.is-pressed) {
-      transform: scale(var(--press-scale));
-      transition-duration: var(--dur-press);
-      transition-timing-function: var(--ease-press-in);
-    }
 
     a {
       color: inherit;

@@ -74,8 +74,7 @@
   </div>
   <?php
   // 「实验性功能」根据主题设置是否展示近期更新
-  // 老用户升级后该配置项为 NULL，因此不能直接和 'on' 严格比较
-  if (($this->options->recentUpdatePosts ?? 'off') === 'on') {
+  if ($this->options->recentUpdatePosts === 'on') {
     // 通过页面列表反查真实 permalink：写死 index.php/xxx.html 在伪静态站点下会 404
     $recentUpdateUrl = '';
     $this->widget('Widget_Contents_Page_List@nav-recent-pages')->to($navPages);

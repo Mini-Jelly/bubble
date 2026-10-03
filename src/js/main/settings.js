@@ -2,7 +2,7 @@ import { getById, setHtml } from './global.js';
 import { createDrawer } from './drawer.js';
 
 /**
-  * 访客级个性化设置（右下角悬浮面板）
+  * 个性化设置（右下角悬浮面板）
   *
   * 分层原则，务必保持：
   *   后台 = 站长设定的默认值，由 PHP 写进每个控件的 data-default

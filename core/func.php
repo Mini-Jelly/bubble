@@ -58,17 +58,33 @@ function bubbleVisitorDefaults(): array
 {
   $options = Helper::options();
 
+  /* 无效值会让 html[theme] 匹配不到任何调色板，--theme-* 全部未定义，整站丢失配色 */
   $themeColor = (string) ($options->themeColor ?: 'blue');
   if (!array_key_exists($themeColor, bubbleThemeColors())) {
-    // 数据库里可能残留已废弃的颜色名，兜底成默认色，
-    // 否则会把一个没有 CSS 变量对应的值写进 html[theme]
     $themeColor = 'blue';
   }
 
   return [
     'themeColor' => $themeColor,
-    // 老用户升级主题后该配置项为 NULL，不能直接和 'site' 严格比较
-    'fontFamily' => ($options->fontFamily ?? 'system') === 'site' ? 'site' : 'system',
+    'fontFamily' => 'site' === $options->fontFamily ? 'site' : 'system',
+  ];
+}
+
+/**
+ * 链接打开方式：站内 / 站外各自的 target 取值
+ *
+ * 返回值即 target 字面值，供 views/header.php 写进 <html> 属性、
+ * src/js/main/link_targets.js 读取。
+ *
+ * @return array{internal: string, external: string}
+ */
+function bubbleLinkTargets(): array
+{
+  $options = Helper::options();
+
+  return [
+    'internal' => '_blank' === $options->internalLinkTarget ? '_blank' : '_self',
+    'external' => '_blank' === $options->externalLinkTarget ? '_blank' : '_self',
   ];
 }
 

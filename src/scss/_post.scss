@@ -141,7 +141,6 @@
       font-size: 12px;
       border-radius: var(--radius-full);
       cursor: pointer;
-      /* 40×40 而不是 32×32：它是键盘与触摸都要够得着的控件 */
       width: 40px;
       height: 40px;
       border: none;
@@ -169,7 +168,7 @@
       width: 40px;
       height: 70px;
       cursor: pointer;
-      background-color: var(--card2);
+      background-color: var(--surface-2);
     }
 
     // 仅当屏幕宽度大于834时才会显示“目录打开兼关闭按钮”
@@ -180,11 +179,6 @@
     }
   }
 
-  /* 文章标题。刻意不给 view-transition-name ——
-     曾经试过让列表页被点开的卡片标题与这里的 h1 做共享元素补间，
-     但两个元素的字号（24px vs 30px）、行数、位置都不同，浏览器补间出来
-     是一次生硬的形变拉伸，比没有动画更难受。
-     页面级的交叉淡入（@view-transition）已经足够表达「换页了」。 */
   &-title {
     text-align: center;
   }
@@ -199,12 +193,6 @@
       display: inline-block;
     }
 
-    /* 作者 / 分类链接的颜色。
-       历史遗留：c6ea71a 把原先覆盖整个 .post 的 `a { color }` 收窄成了
-       `.post-content a`，这两条链接因此失去唯一的颜色来源，直接落到浏览器
-       默认的 -webkit-link（未访问蓝 #0000EE、已访问紫 #551A8B）。
-       main.scss 的全局重置只处理了 text-decoration，不处理 color，所以要补在作用域内。
-       色值沿用 --link，与正文内链、标签链接保持同一套语义。 */
     a {
       color: var(--link);
       transition: color var(--dur-state) var(--ease-standard);
@@ -228,8 +216,6 @@
   //文章内容
   &-content {
 
-    // 只作用于正文内的链接。原先写的是 .post a，会连目录、标签这些结构元素一起命中，
-    // 最后不得不用一串 !important 去反制
     a {
       color: var(--link);
     }
@@ -263,8 +249,7 @@
       transition: background-color var(--dur-state) var(--ease-standard),
         color var(--dur-state) var(--ease-standard);
 
-      /* 实心面走 --primary-solid + --on-primary，不用写死的 #fff：
-         12 套主题里有三档（yellow / lime / green）必须配深色文字 */
+      /* 12 套主题里有三档（yellow / lime / green）必须配深色文字 */
       @include hover-only {
         &:hover {
           background-color: var(--primary-solid);

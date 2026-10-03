@@ -28,15 +28,11 @@ $oc-gray-9: #212529;
   --black: #000;
   --white: #fff;
 
-  /* 表面阶梯。--surface-* 是规范名，--body/--card1/--card2 是历史别名 ——
-     旧代码里这两个名字用得很多，改名会让它们一次性全失效，所以保留指向。 */
+  /* 表面阶梯 */
   --bg-base: #{$oc-gray-0};
   --surface-1: #fff;
   --surface-2: #{$oc-gray-2};
   --surface-3: #{$oc-gray-3};
-  --body: var(--bg-base);
-  --card1: var(--surface-1);
-  --card2: var(--surface-2);
 
   /* 凹陷容器（分段控件轨道）。规则：比它所在的表面暗一档。
      分段控件里未选中的文字压在轨道上，轨道若用 --surface-2，
@@ -96,9 +92,6 @@ $oc-gray-9: #212529;
   --surface-1: #{$oc-gray-8};
   --surface-2: #{$oc-gray-7};
   --surface-3: #5c636a;
-  --body: var(--bg-base);
-  --card1: var(--surface-1);
-  --card2: var(--surface-2);
 
   /* 暗色下「凹陷」= 比所在表面更暗，所以取 --bg-base 而不是 --surface-3 */
   --track: #{$oc-gray-9};

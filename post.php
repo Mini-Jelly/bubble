@@ -1,9 +1,6 @@
 <?php if (!defined('__TYPECHO_ROOT_DIR__'))
   exit;
 $this->need('./views/header.php');
-
-// 老用户升级主题时新增配置项为 NULL，这里必须兜底成默认值，否则功能会静默失效
-$tocEnabled = ($this->options->postToc ?? 'on') === 'on';
 ?>
 
 <body>
@@ -12,7 +9,7 @@ $tocEnabled = ($this->options->postToc ?? 'on') === 'on';
     <div class="row">
       <main class="col-12" id="main">
         <div class="post line-numbers">
-          <?php if ($tocEnabled): ?>
+          <?php if ($this->options->postToc === 'on'): ?>
             <button id="tocToggleBtn" class="post-toc-toggle-btn" type="button" aria-controls="post-toc">目录</button>
           <?php endif; ?>
           <h1 class="post-title">

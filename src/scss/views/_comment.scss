@@ -67,11 +67,6 @@
       position: relative;
 
       @include state-layer;
-
-      @include pressed {
-        transform: scale(0.96);
-        transition: transform var(--dur-press) var(--ease-press-in);
-      }
     }
 
     .input-group {
@@ -108,8 +103,6 @@
     li {
       margin: var(--space-3) 0;
       padding: var(--space-4);
-      // 原先是硬编码 #eee / #f6f6f3 / #fff / #fff9e8 / #444 / #999，
-      // 深色模式下浅底浅字几乎不可读，统一换成随 color-scheme 变化的变量
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
 
