@@ -78,11 +78,6 @@ $oc-gray-9: #212529;
   color: #{$oc-gray-0};
   --text1: #{$oc-gray-5};
   --text2: #{$oc-gray-6};
-  /* 暗色下 --text3 必须与 --text2 同值，不能再往暗走。
-     这里曾经是 gray-7（#495057），压在 --surface-1（gray-8 / #343a40）上只有 1.41:1 ——
-     抽屉里的钻取箭头、拖拽把手、输入框占位符全部等于隐形。
-     而 --text3 要满足非文字元素 3:1 的门槛，最暗只能到 gray-6（3.34:1），
-     恰好就是 --text2。暗色的表面本身已经偏亮，文本阶梯没有第三级的空间。 */
   --text3: #{$oc-gray-6};
   --disabled-text: #{$oc-gray-8};
   --black: #fff;
@@ -100,7 +95,7 @@ $oc-gray-9: #212529;
   --divider: rgb(225 225 225 / 8%);
   --bg-hover: #{$oc-gray-7};
 
-  --material: rgb(33 37 41 / 80%);
+  --material: rgb(90 90 90 / 34%);
   --scrim: rgb(0 0 0 / 56%);
 
   --link: var(--theme-5);

@@ -1,6 +1,6 @@
 {
   "name": "bubble",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "轻量、明暗自适应、零 jQuery 的 Typecho 主题",
   "main": "index.js",
   "scripts": {

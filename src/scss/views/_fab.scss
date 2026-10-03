@@ -269,7 +269,7 @@
   button {
     position: relative; // 压在滑块之上，否则滑块会盖住文字
     z-index: 1;
-    min-height: 28px;
+    min-height: 36px;
     padding: 5px var(--space-2);
     font-family: inherit;
     font-size: 0.8125rem;
@@ -440,6 +440,10 @@
     /* 关掉浮层那套缩放，改成整块从下方滑入 */
     transform: translateY(100%);
     transform-origin: center bottom;
+    /* 抽屉形态一律不透明，隐藏态只靠位移表达 —— 与 .sidebar 同一机制。
+       基础规则里的 opacity 是给宽屏浮层做淡入淡出的，而它不在下面这组过渡里，
+       留着会让面板在第一帧就归零，滑下去整段看不见。 */
+    opacity: 1;
     transition: transform var(--dur-exit) var(--ease-exit),
       visibility 0s linear var(--dur-exit);
 

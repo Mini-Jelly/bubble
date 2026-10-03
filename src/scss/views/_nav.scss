@@ -268,8 +268,6 @@ $nav-height: 56px;
         // 顶级分类列表的所有li触发hover,紧接着的.category-list
         &:hover>.category-list {
           display: block;
-          /* 下拉菜单是浮层，用实心表面 + 大阴影，不能跟着导航一起毛玻璃 ——
-             叠两层模糊会让文字发虚 */
           background-color: var(--surface-1);
           box-shadow: var(--shadow-lg);
           border-radius: var(--radius-md);
@@ -277,7 +275,7 @@ $nav-height: 56px;
           position: absolute;
           top: 0px;
           left: 100%;
-          min-width: 120px;
+          min-width: 60px;
         }
       }
 
@@ -291,7 +289,7 @@ $nav-height: 56px;
           display: flex;
           align-items: center;
           justify-content: center;
-          min-height: 44px;
+          min-height: 50px;
           padding: 0 var(--space-4);
           color: var(--text1);
           white-space: nowrap;
@@ -448,14 +446,13 @@ $nav-height: 56px;
     display: flex;
     align-items: center;
     gap: var(--space-1);
-    min-height: 44px;
-    padding-bottom: var(--space-2);
+    min-height: 52px;
   }
 
   &-back {
     flex: 0 0 auto;
-    width: 40px;
-    height: 40px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -522,7 +519,7 @@ $nav-height: 56px;
     scrollbar-width: none;
   }
 
-  /* 搜索框。*/
+  /* 搜索框 */
   &-search {
     display: flex;
     height: 48px;
@@ -538,15 +535,13 @@ $nav-height: 56px;
       padding: 5px var(--space-5);
       border-radius: var(--radius-full) 0 0 var(--radius-full);
       line-height: inherit;
-      /* 同导航搜索框：凹陷输入框用 --track。暗色下 --surface-2 与 --text3 同值，
-         占位符会完全隐形 */
       background-color: var(--track);
       outline: none;
       transition: border-color var(--dur-state) var(--ease-standard),
         background-color var(--dur-state) var(--ease-standard);
 
       &:focus {
-        background-color: var(--surface-1);
+      background-color: var(--surface-1);
         border-color: var(--theme-6);
       }
 
@@ -609,13 +604,10 @@ $nav-height: 56px;
     }
   }
 
-  /* 钻取箭头。刻意做成独立按钮而不是整行的点击区 ——
-     「点名字跳转」与「点箭头下钻」是两个意图，分开才不会出现「想展开却跳走了」。
-     44×44 是触摸目标的下限。 */
   &-more {
     flex: 0 0 auto;
-    width: 44px;
-    height: 44px;
+    width: 52px;
+    height: 52px;
     display: flex;
     align-items: center;
     justify-content: center;
